@@ -9,8 +9,19 @@
  *   VITE_OLLAMA_MODEL     Model name (e.g. llama3, qwen3, deepseek-r1).
  *   VITE_OLLAMA_TIMEOUT_MS Per-request timeout in ms. Defaults to 120000.
  *
- * In dev, requests to /api/ollama/* are proxied to the local Ollama daemon
+ * In dev, requests to /__ollama/* are proxied to the local Ollama daemon
  * (see vite.config.ts), which removes CORS as a concern.
+ *
+ * Why /__ollama (not /api/ollama): many cloud preview / AI-agent containers
+ * intercept anything under /api/* and return 405 for unknown POST routes,
+ * which masks real Ollama errors as "method not allowed". /__ollama lives
+ * outside that reserved namespace.
+ *
+ * Why Content-Type: text/plain: the browser treats a POST with a simple
+ * Content-Type as a "simple request" (no CORS preflight) regardless of
+ * origin, so even cross-origin preview sandboxes can call the proxy
+ * without first getting a 405 on an OPTIONS preflight. The body is still
+ * JSON-encoded; Ollama parses it just fine.
  *
  * The AI is constrained — by the system prompt below — to act exclusively as
  * a prompt-engineering specialist. It is not a general chatbot and will not
@@ -31,7 +42,8 @@ const OLLAMA_TIMEOUT_MS = (() => {
   return Number.isFinite(parsed) && parsed >= MIN_OLLAMA_TIMEOUT_MS ? parsed : 120_000;
 })();
 
-const OLLAMA_PROXY_PATH = '/api/ollama';
+// Path the browser fetches. Rewritten by vite.config.ts to the upstream.
+const OLLAMA_PROXY_PATH = '/__ollama';
 
 const SYSTEM_PROMPT = `
 You are an AI agent specialized EXCLUSIVELY in prompt engineering for software development.
@@ -98,7 +110,8 @@ export async function generateOptimizedPrompt(
   try {
     const response = await fetch(`${OLLAMA_PROXY_PATH}/api/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // text/plain => "simple request", no CORS preflight regardless of origin.
+      headers: { 'Content-Type': 'text/plain; charset=UTF-8' },
       signal: controller.signal,
       body: JSON.stringify({
         model: OLLAMA_MODEL,
@@ -120,9 +133,15 @@ export async function generateOptimizedPrompt(
       } catch {
         /* ignore */
       }
+      const diagnostic = response.status === 404
+        ? `the model "${OLLAMA_MODEL}" is not pulled — try \`ollama pull ${OLLAMA_MODEL}\`.`
+        : response.status === 405
+          ? 'the route is being intercepted (often a /api/* namespace in the host preview) or the upstream refused the method.'
+          : 'the upstream Ollama daemon rejected the request.';
       throw new OllamaError(
-        `Ollama returned ${response.status}: ${detail.slice(0, 500)}. ` +
-          `Is the model "${OLLAMA_MODEL}" pulled? Try \`ollama pull ${OLLAMA_MODEL}\`.`,
+        `Ollama returned ${response.status}${detail ? `: ${detail.slice(0, 500)}` : ''}. ` +
+          `Reaching ${OLLAMA_BASE_URL} via ${OLLAMA_PROXY_PATH} — ${diagnostic} ` +
+          `Make sure \`ollama serve\` is running and the host isn't rewriting the URL path.`,
       );
     }
 
@@ -151,8 +170,8 @@ export async function generateOptimizedPrompt(
       );
     }
     throw new OllamaError(
-      `Could not reach the local Ollama daemon at ${OLLAMA_PROXY_PATH}. ` +
-        `Is \`ollama serve\` running on ${OLLAMA_BASE_URL}?`,
+      `Could not reach the local Ollama daemon at ${OLLAMA_BASE_URL} via ${OLLAMA_PROXY_PATH}. ` +
+        `Is \`ollama serve\` running?`,
       err,
     );
   } finally {

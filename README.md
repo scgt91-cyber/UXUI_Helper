@@ -87,10 +87,16 @@ npm run build
 npm run preview
 ```
 
-> The app calls the Ollama daemon from the user's browser via a Vite dev
-> proxy (`/api/ollama`). For a deployed build, point the same proxy at a
-> reachable Ollama instance (and lock down `OLLAMA_ORIGINS` accordingly).
-> Deployment-specific routing is **not** included in this repo.
+> The app calls the Ollama daemon from the user's browser via the Vite
+> dev proxy at `/__ollama` (rewritten to `http://127.0.0.1:11434`).
+> The `/_` prefix is deliberate — many cloud preview / AI-agent
+> containers reserve `/api/*` and 405 anything they don't explicitly
+> route, so we use a non-reserved namespace.
+>
+> Cross-origin previews: send `Content-Type: text/plain` so the
+> browser treats the call as a CORS-simple request (no preflight)
+> regardless of origin. The proxy also adds permissive CORS response
+> headers.
 
 ## Project layout
 
