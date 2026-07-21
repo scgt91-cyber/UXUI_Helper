@@ -31,11 +31,25 @@
  * answer off-topic questions.
  */
 
+/**
+ * Build fingerprint, auto-injected at build time by vite.config.ts (see the
+ * `define` block). Exposed so the UI can display "build: <sha>" and so
+ * every error banner can prefix `[build <sha>]` — letting the user compare
+ * their running bundle against origin/main without DevTools.
+ */
+export const BUILD = {
+  commit: __BUILD_COMMIT__ || 'unknown',
+  date: __BUILD_DATE__ || 'unknown',
+};
+
 export const OLLAMA_MODEL =
   import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'llama3';
 
-const OLLAMA_BASE_URL =
+export const OLLAMA_BASE_URL =
   import.meta.env.VITE_OLLAMA_BASE_URL?.trim() || 'http://127.0.0.1:11434';
+
+const GENERATE_ENDPOINT = `${OLLAMA_BASE_URL}/api/generate`;
+const TAGS_ENDPOINT = `${OLLAMA_BASE_URL}/api/tags`;
 
 // 1s floor so a typo like `5` doesn't silently set a 5ms abort.
 const MIN_OLLAMA_TIMEOUT_MS = 1_000;
@@ -128,7 +142,7 @@ export async function generateOptimizedPrompt(
   const timeout = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    const response = await fetch(GENERATE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
@@ -162,10 +176,13 @@ export async function generateOptimizedPrompt(
             `something between your browser and Ollama rejected POST (a Cloudflare Worker, Vercel rewrite, or your tunnel config may disallow POST) — try \`curl -X POST ${OLLAMA_BASE_URL}/api/generate\` to confirm Ollama itself accepts the call.`
           : 'the Ollama daemon rejected the request.';
       throw new OllamaError(
-        `Ollama returned ${response.status}${detail ? `: ${detail.slice(0, 500)}` : ''}. ` +
+        `[build ${BUILD.commit}] Ollama returned ${response.status}${detail ? `: ${detail.slice(0, 500)}` : ''}. ` +
           `${diagnostic} ` +
-          `Endpoint: POST ${OLLAMA_BASE_URL}/api/generate. ` +
-          `Make sure \`ollama serve\` is running and the model is pulled.`,
+          `Endpoint: POST ${GENERATE_ENDPOINT}. ` +
+          `Browser origin: ${typeof window !== 'undefined' ? window.location.origin : '(server)'}. ` +
+          `Method: POST. Content-Type: application/json. ` +
+          `Make sure \`ollama serve\` is running and the model is pulled. ` +
+          `If you see the OLD \`/api/ollama\` or \`/__ollama\` path in the error, your preview is serving a stale build — force-resync.`,
       );
     }
 
@@ -189,26 +206,28 @@ export async function generateOptimizedPrompt(
     }
     if (err?.name === 'AbortError') {
       throw new OllamaError(
-        `Ollama request timed out after ${OLLAMA_TIMEOUT_MS}ms. ` +
-          `The model may still be loading — try again, or raise VITE_OLLAMA_TIMEOUT_MS.`,
+        `[build ${BUILD.commit}] Ollama request timed out after ${OLLAMA_TIMEOUT_MS}ms. ` +
+          `The model may still be loading — try again, or raise VITE_OLLAMA_TIMEOUT_MS. ` +
+          `Endpoint: POST ${GENERATE_ENDPOINT}.`,
       );
     }
     // CORS is listed first in this list because it's the most common cause
     // when a deployed / preview page can't reach Ollama.
     //
     // When the diagnostic heads-up applies (VITE_OLLAMA_BASE_URL is still a
-    // loopback URL AND the page is loaded from a non-localhost origin AND
-    // this isn't `vite dev`), the four-mode enumeration is replaced with a
-    // short targeted hint to keep the banner readable.
+    // loopback URL AND the page is loaded from a non-localhost origin), the
+    // four-mode enumeration is replaced with a short targeted hint to keep
+    // the banner readable.
     const headsUp = LOOPBACK_HOSTNAME.test(OLLAMA_BASE_URL) &&
       pageIsOnLocalhost() === false;
     const message = headsUp
-      ? `Network error: ${OLLAMA_BASE_URL}/api/generate is unreachable from this page's ` +
-        `network. VITE_OLLAMA_BASE_URL is still pointing at a loopback address, but the page is ` +
-        `being served from a non-localhost origin. Set VITE_OLLAMA_BASE_URL to a publicly ` +
-        `reachable endpoint (Cloudflare Tunnel, ngrok, or hosted Ollama over HTTPS) and configure ` +
-        `\u2018OLLAMA_ORIGINS\u2019 on the Ollama daemon to allow this page's origin (or \`*\`).`
-      : `Network error: could not reach Ollama at ${OLLAMA_BASE_URL}/api/generate. ` +
+      ? `[build ${BUILD.commit}] Network error: ${GENERATE_ENDPOINT} is unreachable from this page's ` +
+        `network (${typeof window !== 'undefined' ? window.location.origin : '(server)'}). ` +
+        `VITE_OLLAMA_BASE_URL is still pointing at a loopback address, but the page is being ` +
+        `served from a non-localhost origin. Set VITE_OLLAMA_BASE_URL to a publicly reachable ` +
+        `endpoint (Cloudflare Tunnel, ngrok, or hosted Ollama over HTTPS) and configure ` +
+        `OLLAMA_ORIGINS on the Ollama daemon to allow this page's origin (or \`*\`).`
+      : `[build ${BUILD.commit}] Network error: could not reach Ollama at ${GENERATE_ENDPOINT}. ` +
         `Likely causes (most common first): ` +
         `(1) CORS blocked by the browser — set \`OLLAMA_ORIGINS\` on the Ollama daemon to allow this page's origin (or \`*\`); ` +
         `(2) \`ollama serve\` is not running at that URL; ` +
@@ -217,6 +236,88 @@ export async function generateOptimizedPrompt(
     throw new OllamaError(message, err);
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+/**
+ * Diagnostic helper. Calls `GET /api/tags` on the configured Ollama
+ * endpoint and returns what the browser actually did — the URL it called,
+ * its own origin, the HTTP status (or a network error class), and the
+ * list of models Ollama currently has loaded. The UI surfaces this so the
+ * user can copy-paste it back when debugging connectivity.
+ */
+export interface OllamaDiagnostic {
+  url: string;
+  origin: string;
+  method: 'GET';
+  status: 'reachable' | 'unreachable' | 'timeout' | 'http-error';
+  httpStatus?: number;
+  detail?: string;
+}
+
+const DIAGNOSE_TIMEOUT_MS = 5_000;
+
+export async function diagnoseOllama(): Promise<OllamaDiagnostic> {
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : '(server)';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DIAGNOSE_TIMEOUT_MS);
+  try {
+    const res = await fetch(TAGS_ENDPOINT, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      const models = Array.isArray(data?.models)
+        ? data.models
+            .map((m: { name?: string }) => m.name ?? '?')
+            .join(', ')
+        : null;
+      return {
+        url: TAGS_ENDPOINT,
+        origin,
+        method: 'GET',
+        status: 'reachable',
+        httpStatus: res.status,
+        detail: models ? `models: ${models}` : 'reachable',
+      };
+    }
+    let body = '';
+    try {
+      body = (await res.text()).slice(0, 200);
+    } catch {
+      /* ignore */
+    }
+    return {
+      url: TAGS_ENDPOINT,
+      origin,
+      method: 'GET',
+      status: 'http-error',
+      httpStatus: res.status,
+      detail: `${res.status} ${res.statusText}${body ? ` — ${body}` : ''}`.trim(),
+    };
+  } catch (err: unknown) {
+    clearTimeout(timer);
+    if ((err as { name?: string } | null)?.name === 'AbortError') {
+      return {
+        url: TAGS_ENDPOINT,
+        origin,
+        method: 'GET',
+        status: 'timeout',
+        detail: `${DIAGNOSE_TIMEOUT_MS}ms timeout`,
+      };
+    }
+    const message =
+      err instanceof Error ? err.message : String(err);
+    return {
+      url: TAGS_ENDPOINT,
+      origin,
+      method: 'GET',
+      status: 'unreachable',
+      detail: message,
+    };
   }
 }
 

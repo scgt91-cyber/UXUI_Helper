@@ -1,12 +1,21 @@
 import React, { useRef, useState } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { generateOptimizedPrompt, OllamaError, OLLAMA_MODEL } from '@/lib/ai-service';
+import { ArrowRight, Sparkles, Activity } from 'lucide-react';
+import {
+  BUILD,
+  OLLAMA_MODEL,
+  OllamaError,
+  diagnoseOllama,
+  generateOptimizedPrompt,
+  type OllamaDiagnostic,
+} from '@/lib/ai-service';
 
 export function PromptLabPage() {
   const [input, setInput] = useState('hazme una app bonita para vender zapatos');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [diag, setDiag] = useState<OllamaDiagnostic | null>(null);
+  const [isDiagLoading, setIsDiagLoading] = useState(false);
 
   // Increments on every handleOptimize call. Only the latest in-flight request
   // is allowed to mutate UI state, so out-of-order resolutions from rapid
@@ -43,6 +52,16 @@ export function PromptLabPage() {
     }
   };
 
+  const handleDiagnose = async () => {
+    setIsDiagLoading(true);
+    try {
+      const result = await diagnoseOllama();
+      if (requestIdRef.current === requestIdRef.current) setDiag(result);
+    } finally {
+      setIsDiagLoading(false);
+    }
+  };
+
   return (
     <div className="w-full animate-in fade-in duration-500 pb-20">
       <div className="mb-12 border-b-4 border-v-ink pb-8 px-4 md:px-8 pt-8">
@@ -57,6 +76,58 @@ export function PromptLabPage() {
           <span className="font-bold text-v-ink">{OLLAMA_MODEL}</span>
           <span className="ml-2 text-v-ink/40">(cambiable vía VITE_OLLAMA_MODEL)</span>
         </p>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={handleDiagnose}
+            disabled={isDiagLoading}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-v-bg border-2 border-v-ink hover:bg-v-yellow transition-colors disabled:opacity-50"
+          >
+            <Activity className="w-4 h-4" />
+            {isDiagLoading ? 'Probando…' : 'Probar Conexión con Ollama'}
+          </button>
+          {diag && (
+            <span
+              className={
+                'text-xs font-bold uppercase tracking-widest ' +
+                (diag.status === 'reachable'
+                  ? 'text-v-green'
+                  : diag.status === 'timeout'
+                    ? 'text-v-yellow'
+                    : 'text-v-red')
+              }
+              title={`GET ${diag.url}`}
+            >
+              {diag.status === 'reachable'
+                ? '✓ Ollama alcanzable'
+                : diag.status === 'timeout'
+                  ? '◯ Timeout'
+                  : `✗ ${diag.status}`}
+            </span>
+          )}
+        </div>
+        {diag && (
+          <div className="mt-3 border-2 border-v-ink bg-v-bg/40 p-3 text-xs font-mono leading-relaxed text-v-ink">
+            <div>
+              <span className="font-bold">URL llamada:</span> {diag.url}
+            </div>
+            <div>
+              <span className="font-bold">Método:</span> {diag.method}
+            </div>
+            <div>
+              <span className="font-bold">Origen del navegador:</span> {diag.origin}
+            </div>
+            <div>
+              <span className="font-bold">Estado:</span>{' '}
+              {diag.status}
+              {diag.httpStatus != null ? ` (HTTP ${diag.httpStatus})` : ''}
+            </div>
+            {diag.detail && (
+              <div>
+                <span className="font-bold">Detalle:</span> {diag.detail}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 border-y-2 md:border-2 border-v-ink min-h-[600px] bg-white mx-0 md:mx-8">
@@ -96,11 +167,6 @@ export function PromptLabPage() {
                   Error del modelo local
                 </p>
                 <p className="text-base leading-relaxed whitespace-pre-wrap">{error}</p>
-                <p className="text-xs text-v-ink/60 mt-4">
-                  Asegúrate de que Ollama esté en ejecución (<code>ollama serve</code>) y
-                  que el modelo configurado (<code>{OLLAMA_MODEL}</code>) esté
-                  descargado (<code>ollama pull {OLLAMA_MODEL}</code>).
-                </p>
               </div>
             ) : output ? (
               <div className="prose prose-lg max-w-none">
@@ -131,6 +197,10 @@ export function PromptLabPage() {
           </p>
         </div>
       )}
+
+      <footer className="mt-16 mx-0 md:mx-8 px-0 md:px-0 text-xs font-mono text-v-ink/40 text-center">
+        build {BUILD.commit} · {BUILD.date}
+      </footer>
     </div>
   );
 }
