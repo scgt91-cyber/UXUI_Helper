@@ -1,112 +1,196 @@
-// Removido GoogleGenAI de aquí ya que ahora usamos la versión de Vercel /api
+/**
+ * ai-service.ts
+ *
+ * Calls a local Ollama instance to optimize a user-supplied prompt into a
+ * high-quality, structured prompt suitable for AI coding assistants.
+ *
+ * Configuration (via Vite env vars / .env):
+ *   VITE_OLLAMA_BASE_URL  Ollama base URL. Defaults to http://localhost:11434.
+ *   VITE_OLLAMA_MODEL     Model name (e.g. llama3, qwen3, deepseek-r1).
+ *   VITE_OLLAMA_TIMEOUT_MS Per-request timeout in ms. Defaults to 120000.
+ *
+ * In dev, requests to /api/ollama/* are proxied to the local Ollama daemon
+ * (see vite.config.ts), which removes CORS as a concern.
+ *
+ * The AI is constrained — by the system prompt below — to act exclusively as
+ * a prompt-engineering specialist. It is not a general chatbot and will not
+ * answer off-topic questions.
+ */
 
-export async function generateOptimizedPrompt(input: string): Promise<{ optimizedPrompt: string; explanation: string }> {
-  // ============================================================================
-  // 🚀 INSTRUCCIONES PARA VERCEL (DESPLIEGUE SEGURO)
-  // ============================================================================
-  // Cuando descargues este código y lo subas a Vercel:
-  // 1. COMENTA el bloque "VERSIÓN LOCAL" que hay más abajo.
-  // 2. DESCOMENTA este bloque "VERSIÓN VERCEL".
-  // Esto hará que React llame a la carpeta /api de Vercel en lugar de exponer tu API Key.
+export const OLLAMA_MODEL =
+  import.meta.env.VITE_OLLAMA_MODEL?.trim() || 'llama3';
 
+const OLLAMA_BASE_URL =
+  import.meta.env.VITE_OLLAMA_BASE_URL?.trim() || 'http://127.0.0.1:11434';
+
+// 1s floor so a typo like `5` doesn't silently set a 5ms abort.
+const MIN_OLLAMA_TIMEOUT_MS = 1_000;
+const OLLAMA_TIMEOUT_MS = (() => {
+  const raw = import.meta.env.VITE_OLLAMA_TIMEOUT_MS?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed >= MIN_OLLAMA_TIMEOUT_MS ? parsed : 120_000;
+})();
+
+const OLLAMA_PROXY_PATH = '/api/ollama';
+
+const SYSTEM_PROMPT = `
+You are an AI agent specialized EXCLUSIVELY in prompt engineering for software development.
+
+Your ONLY responsibility is to transform a user-supplied prompt into a high-quality, professional prompt intended for AI coding assistants such as Claude, GPT, Cursor, Windsurf, Lovable, Bolt, and similar tools.
+
+Domains of expertise you draw on (use them, never go outside them):
+- Prompt engineering
+- UX/UI design and design systems
+- Frontend development (React, TypeScript, Next.js, Tailwind CSS, Vite)
+- Backend development (Node.js, REST APIs, GraphQL, databases)
+- Full-stack architecture
+- Figma and modern web application patterns
+- AI-assisted software development workflows
+
+Hard constraints — violating any of these is a failure:
+1. You do NOT answer general knowledge questions.
+2. You do NOT act as a chatbot or engage in conversation.
+3. You do NOT perform tasks unrelated to improving the user's prompt.
+4. You output ONLY a single JSON object. No prose, no markdown fences, no preamble, no commentary.
+5. You do NOT output reasoning, planning, or thought tags of any kind (e.g. <think>...</think>, <reason>...</reason>). The JSON object is your entire response.
+6. The JSON object MUST have exactly one key: "optimizedPrompt" (string).
+7. The "optimizedPrompt" must be written in Spanish (the application's UI language), but standard technical terms (flexbox, grid, hover, breakpoints, CTA, WCAG, design tokens, affordance, cognitive load, etc.) MUST stay in English.
+8. The optimized prompt must be clear, detailed, structured, context-aware, and technically accurate.
+9. Organize it with logical sections such as: Objetivo, Layout & Grid, Typography & Spacing, Interaction & States, Accessibility (WCAG), Constraints & Assumptions, Expected Behavior, Edge Cases, Desired Output.
+10. Specify constraints, assumptions, expected behavior, edge cases, and the desired output.
+11. Preserve the user's original intent. Do not invent unrelated features.
+12. Fill in missing technical context only when it is genuinely required to make the prompt executable.
+13. Do not echo the user's input verbatim. Rewrite it using professional software engineering terminology.
+
+Output format — produce exactly the following shape and nothing more:
+{"optimizedPrompt":"<the new prompt, in Spanish with English technical terms, organized with the sections above>"}
+`.trim();
+
+export interface OptimizedPromptResult {
+  optimizedPrompt: string;
+}
+
+export class OllamaError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = 'OllamaError';
+  }
+}
+
+/**
+ * Calls the local Ollama daemon to optimize the prompt. Throws on failure so
+ * callers can surface a real error — no hardcoded fallback template is used.
+ */
+export async function generateOptimizedPrompt(
+  input: string,
+): Promise<OptimizedPromptResult> {
+  const trimmed = (input ?? '').trim();
+  if (!trimmed) {
+    throw new OllamaError('Input is empty.');
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
 
   try {
-    const response = await fetch('/api/optimize', {
+    const response = await fetch(`${OLLAMA_PROXY_PATH}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input }),
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        system: SYSTEM_PROMPT,
+        prompt: trimmed,
+        format: 'json',
+        stream: false,
+        options: {
+          temperature: 0.2,
+          num_predict: 1024,
+        },
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Error de la API: ${response.statusText}`);
+      let detail = response.statusText;
+      try {
+        detail = (await response.text()) || detail;
+      } catch {
+        /* ignore */
+      }
+      throw new OllamaError(
+        `Ollama returned ${response.status}: ${detail.slice(0, 500)}. ` +
+          `Is the model "${OLLAMA_MODEL}" pulled? Try \`ollama pull ${OLLAMA_MODEL}\`.`,
+      );
     }
 
-    return await response.json() as { optimizedPrompt: string; explanation: string };
-  } catch (error: any) {
-    console.error("Vercel API Service Error:", error);
-    return getFallbackResponse();
+    const payload = await response.json().catch(() => null);
+    const raw = typeof payload?.response === 'string' ? payload.response : '';
+    if (!raw) {
+      throw new OllamaError('Ollama returned an empty response.');
+    }
+
+    const optimizedPrompt = extractOptimizedPrompt(raw);
+    if (!optimizedPrompt) {
+      throw new OllamaError(
+        'Ollama response did not include a valid "optimizedPrompt" string.',
+      );
+    }
+
+    return { optimizedPrompt };
+  } catch (err) {
+    if (err instanceof OllamaError) {
+      throw err;
+    }
+    if (err?.name === 'AbortError') {
+      throw new OllamaError(
+        `Ollama request timed out after ${OLLAMA_TIMEOUT_MS}ms. ` +
+          `The model may still be loading — try again, or raise VITE_OLLAMA_TIMEOUT_MS.`,
+      );
+    }
+    throw new OllamaError(
+      `Could not reach the local Ollama daemon at ${OLLAMA_PROXY_PATH}. ` +
+        `Is \`ollama serve\` running on ${OLLAMA_BASE_URL}?`,
+      err,
+    );
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-// ============================================================================
+/**
+ * Pulls out the first JSON object from the model's output (in case the local
+ * model wraps it in markdown fences, leaks reasoning tags like <think>, or
+ * otherwise adds stray text) and reads the "optimizedPrompt" field. Returns
+ * null if nothing usable is found.
+ */
+function extractOptimizedPrompt(raw: string): string | null {
+  const cleaned = raw
+    // Strip markdown code fences (```json ... ``` or ``` ... ```).
+    .replace(/```(?:json)?/gi, '')
+    .replace(/```/g, '')
+    // Strip reasoning-model artifacts (<think>...</think>, <reason>...</reason>).
+    .replace(/<(think|reason|reflection|analysis)>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\/?(?:think|reason|reflection|analysis)\/?>/gi, '')
+    .trim();
 
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) return null;
 
-// ============================================================================
-// 💻 VERSIÓN LOCAL / AI STUDIO (Insegura para producción pública)
-// ============================================================================
-
-/*
-try {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(match[0]);
+  } catch {
+    return null;
   }
 
-  const ai = new GoogleGenAI({ apiKey });
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
-    contents: `You are an expert UX/UI Architect and Frontend Engineer. 
-    Translate the following generic user request into a highly professional, structured prompt intended for an AI code generator or design system.
-    
-    The output prompt MUST use professional UX/UI terminology (e.g., visual hierarchy, affordances, cognitive load, 8pt grid system, design tokens, WCAG accessibility, responsive breakpoints).
-    It should be structured logically (e.g., Objetivo, Layout & Grid, Typography & Spacing, Interaction & States).
-    
-    Also provide a brief explanation of WHY these changes were made and what UX/UI principles were applied.
-    CRITICAL: The 'optimizedPrompt' MUST be written in Spanish, but keep standard UX/UI and frontend technical terms in English (e.g., flexbox, grid, hover, affordance, breakpoints, CTA). The 'explanation' MUST also be in Spanish.
-    
-    User Request: "${input}"`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          optimizedPrompt: {
-            type: Type.STRING,
-            description: "The highly structured, professional UX/UI prompt in Spanish with English technical terms.",
-          },
-          explanation: {
-            type: Type.STRING,
-            description: "Explanation of the UX/UI principles applied during translation, in Spanish.",
-          },
-        },
-        required: ["optimizedPrompt", "explanation"],
-      },
-    },
-  });
-
-  const text = response.text;
-  if (!text) throw new Error("No response from AI");
-  
-  return JSON.parse(text) as { optimizedPrompt: string; explanation: string };
-} catch (error) {
-  console.error("AI Service Error:", error);
-  return getFallbackResponse();
-}
-*/
-
-
-function getFallbackResponse(): { optimizedPrompt: string; explanation: string } {
-  return {
-    optimizedPrompt: `Objetivo: Diseñar una interfaz e-commerce mobile-first para calzado.
-
-Layout & Grid:
-- Implementar un sistema de grid responsivo de 12 columnas.
-- Utilizar un sistema de espaciado de 8pt para mantener un ritmo y padding consistentes.
-- Asegurar un ancho máximo de contenido (max-w-7xl) para viewports ultra-anchos.
-
-Typography & Hierarchy:
-- Establecer una escala tipográfica estricta usando una tipografía sans-serif (ej. Inter).
-- Usar font-weight y tamaño para crear una visual hierarchy clara entre títulos de productos, precios y metadatos secundarios.
-
-Interaction & Affordances:
-- Diseñar botones Call-to-Action (CTA) principales con alto contraste y affordances claros.
-- Definir estados hover, active y disabled para todos los elementos interactivos.
-- Minimizar el cognitive load agrupando información relacionada (ej. selección de talla y add-to-cart).
-
-Accessibility (WCAG):
-- Asegurar ratios de contraste de color mínimos (4.5:1) para el texto.
-- Mantener un touch target size mínimo de 44x44pt para interacciones móviles.`,
-    explanation: "Se han traducido términos subjetivos como 'bonita' en requisitos estructurales objetivos (grid, espaciado, tipografía). Se añadieron restricciones de accesibilidad y estados de interacción para asegurar un sistema de diseño robusto y listo para producción."
-  };
+  if (parsed && typeof parsed === 'object') {
+    const candidate = (parsed as Record<string, unknown>).optimizedPrompt;
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+  return null;
 }
