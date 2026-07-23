@@ -96,7 +96,7 @@ function apiBaseUrl(): string {
 
 function apiUrl(path: string): string {
   const base = apiBaseUrl();
-  return base ? `${base}${path}` : path;
+  return `${base}${path}`;
 }
 
 /* -------------------------------------------------------------------------- */
