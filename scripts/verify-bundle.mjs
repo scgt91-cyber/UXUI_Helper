@@ -5,18 +5,18 @@
  * Post-build guard that fails `npm run build` if the client bundle
  * (including sourcemaps) ever contains:
  *
- *   - VITE_OLLAMA_* references (a Vite env var the frontend must never read),
+ *   - OPENROUTER_API_KEY references (a server secret the frontend must never read),
  *   - any hardcoded http://127.0.0.1:11434 or http://localhost:11434
  *     (loopback fallback, now architecturally forbidden for the frontend),
- *   - any bare "OLLAMA_BASE_URL" string (the server-side env var),
- *   - any path to /api/generate or /api/tags (server-only Ollama routes
+ *   - any bare "OPENROUTER_API_KEY" string (the server-side secret),
+ *   - any direct OpenRouter API endpoint reference
  *     the browser must never reach — even via string concatenation or
  *     template literals, with or without quotes),
  *   - any `fetch(` or `XMLHttpRequest` targeting an Ollama endpoint
  *     string. (Defense in depth.)
  *
  * The architecture is: Browser -> POST /api/improve-prompt -> (server)
- * Ollama. The browser bundle (including sourcemaps) must NEVER contain
+ * OpenRouter. The browser bundle (including sourcemaps) must NEVER contain
  * any of the patterns above.
  *
  * LIMITATIONS — the static guard is best-effort, not exhaustive. It
@@ -51,15 +51,14 @@ const DIST = join(ROOT, 'dist');
 // - Loopback URL pattern is anchored with optional scheme so it matches
 //   both "127.0.0.1:11434" and "http://127.0.0.1:11434".
 const FORBIDDEN = [
-  { label: 'VITE_OLLAMA_* (any Vite-prefixed Ollama env var)', pattern: /VITE_OLLAMA_\w+/g },
-  { label: 'bare OLLAMA_BASE_URL (server env, must not be in bundle)', pattern: /OLLAMA_BASE_URL/g },
-  { label: 'hardcoded loopback Ollama URL (e.g. 127.0.0.1:11434)', pattern: /(?:https?:\/\/)?(?:127\.0\.0\.1|localhost|0\.0\.0\.0):11434/gi },
-  // /api/generate and /api/tags are Ollama routes meant for the
-  // serverless function only — they must never appear in the browser
-  // bundle, even via concatenation. The pattern intentionally does NOT
-  // require quote-wrapping.
-  { label: 'Ollama /api/generate (server-only POST)', pattern: /\/api\/generate/g },
-  { label: 'Ollama /api/tags (server-only GET)',     pattern: /\/api\/tags/g },
+  {
+    label: 'OPENROUTER_API_KEY (server secret, must not be in bundle)',
+    pattern: /OPENROUTER_API_KEY/g,
+  },
+  {
+    label: 'direct OpenRouter API endpoint reference',
+    pattern: /openrouter\.ai/gi,
+  },
 ];
 
 /** Extensions to scan, including sourcemaps so source comments don't leak. */
@@ -122,8 +121,8 @@ async function main() {
   }
 
   console.error('✗ verify-bundle: forbidden patterns found in the client bundle.');
-  console.error('The architectural firewall is leaking. The browser must NEVER');
-  console.error('see any Ollama URL, env var, or route. Fix the source so none of');
+console.error('The architectural firewall is leaking. The browser must NEVER');
+console.error('see private AI credentials or provider endpoints. Fix the source so none of');
   console.error('the patterns below appear in dist/.');
   console.error('');
   for (const v of violations) {
@@ -134,11 +133,11 @@ async function main() {
   }
   console.error('');
   console.error('How to fix:');
-  console.error('  - Browser must NEVER reference VITE_OLLAMA_*, localhost:11434,');
-  console.error('    /api/generate, or /api/tags.');
-  console.error('  - Server reads OLLAMA_BASE_URL via process.env.* at runtime;');
-  console.error('    it is NEVER bundled into the client.');
-  console.error('  - Run `grep -rIn OLLAMA src/` to find the offender.');
+console.error('  - Browser must NEVER reference OPENROUTER_API_KEY');
+console.error('    or provider API endpoints directly.');
+console.error('  - Server reads secrets via process.env.* at runtime;');
+console.error('    they are NEVER bundled into the client.');
+console.error('  - Run `grep -rIn OPENROUTER src/` to find the offender.');
   process.exit(1);
 }
 

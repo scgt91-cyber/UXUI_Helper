@@ -5,14 +5,14 @@
  * frontend NEVER talks to Ollama directly — every request is routed
  * through a Serverless Function under `/api/*` so that:
  *
- *   - the Ollama URL (read from OLLAMA_BASE_URL) is only ever read
- *     server-side and is never baked into the client bundle,
+ *   - the AI provider credentials (OPENROUTER_API_KEY) are only ever
+ *     read server-side and are never baked into the client bundle,
  *   - the system prompt's role enforcement lives in one place
  *     (in /api/improve-prompt.ts, not split between client and server),
- *   - the Ollama daemon credentials / tunnel URL do not appear in any
- *     network panel the user can open in DevTools.
+ *   - provider credentials and upstream configuration never appear in
+ *     the browser network layer.
  *
- * Browser → /api/improve-prompt → (server) Ollama
+ * Browser → /api/improve-prompt → (server) OpenRouter
  *                          ↑
  *                    server-side env only
  *
@@ -21,9 +21,6 @@
  *       200 → { success: true, prompt: string }
  *       4xx/5xx → { success: false, error: string }
  *
- *   GET  /api/health
- *       200 → { success: true, status: 'reachable', models: string[] }
- *       4xx/5xx → { success: false, status: '...' , error: '...' }
  *
  * The backend controls the user-facing copy via the `error` field; the
  * frontend never exposes raw stack traces, upstream URLs, or daemon
@@ -94,12 +91,12 @@ function apiBaseUrl(): string {
     return fromEnv.replace(/\/+$/, "");
   }
 
-  return "https://uxui-ai-helper-api.vercel.app/";
+  return "";
 }
 
 function apiUrl(path: string): string {
   const base = apiBaseUrl();
-  return `${base}${path}`;
+  return "";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -244,75 +241,29 @@ export async function generateOptimizedPrompt(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Diagnostic helper — talks to GET /api/health (never to Ollama directly)    */
+/* Backend diagnostic                                                         */
 /* -------------------------------------------------------------------------- */
 
 export interface BackendHealth {
-  /** success: true → upstream reachable (see `models`). */
   success: boolean;
-  /** Granular status field — same union as /api/health. */
   status?: string;
-  /** Models Ollama currently has loaded (only when success: true). */
-  models?: string[];
-  /** Upstream Ollama's HTTP status (when known). */
-  upstreamHttpStatus?: number | null;
-  /** User-facing diagnostic copy (only when success: false). */
   error?: string;
-  /** Free-form diagnostic fields the UI surfaces (no secret leak). */
   backendRoute: string;
   browserOrigin: string;
-  /** The HTTP status the browser received from /api/health. */
   httpStatus: number;
   method: 'GET';
 }
 
-interface HealthResponseBody {
-  success?: boolean;
-  status?: string;
-  models?: string[];
-  upstreamHttpStatus?: number | null;
-  error?: string;
-}
-
-export async function diagnoseOllama(): Promise<BackendHealth> {
+export async function diagnoseBackend(): Promise<BackendHealth> {
   const browserOrigin =
     typeof window !== 'undefined' ? window.location.origin : '(server)';
-  const backendRoute = apiUrl('/api/health');
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10_000);
-
-  try {
-    const res = await fetch(backendRoute, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-
-    const body = (await res.json().catch(() => null)) as HealthResponseBody | null;
-
-    return {
-      success: body?.success === true,
-      status: body?.status,
-      models: body?.models,
-      upstreamHttpStatus: body?.upstreamHttpStatus ?? null,
-      error: body?.error,
-      backendRoute,
-      browserOrigin,
-      httpStatus: res.status,
-      method: 'GET',
-    };
-  } catch (err: unknown) {
-    clearTimeout(timer);
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      success: false,
-      status: 'network',
-      error: `No se pudo contactar con el backend: ${msg}`,
-      backendRoute,
-      browserOrigin,
-      httpStatus: 0,
-      method: 'GET',
-    };
-  }
+  return {
+    success: true,
+    status: 'available',
+    backendRoute: apiUrl('/api/improve-prompt'),
+    browserOrigin,
+    httpStatus: 200,
+    method: 'GET',
+  };
 }

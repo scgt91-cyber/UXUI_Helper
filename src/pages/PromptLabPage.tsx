@@ -5,7 +5,7 @@ import {
   BackendError,
   type BackendErrorKind,
   type BackendHealth,
-  diagnoseOllama,
+  diagnoseBackend,
   generateOptimizedPrompt,
 } from '@/lib/ai-service';
 
@@ -45,12 +45,12 @@ export function PromptLabPage() {
 
   // Auto-run the diagnostic on first mount so any backend / upstream
   // failure is visible without the user having to click anything. This
-  // is a GET /api/health (a server-side probe) — NOT a prompt preload;
+ // is a backend diagnostic — NOT a prompt preload;
   // the AI body only fires after the user clicks "Traducir a Sistema".
   useEffect(() => {
     let cancelled = false;
     setIsDiagLoading(true);
-    diagnoseOllama()
+    diagnoseBackend()
       .then((result) => {
         if (cancelled) return;
         setDiag(result);
@@ -66,7 +66,7 @@ export function PromptLabPage() {
   const runDiagnose = async () => {
     setIsDiagLoading(true);
     try {
-      const diagResult = await diagnoseOllama();
+      const diagResult = await diagnoseBackend();
       setDiag(diagResult);
     } finally {
       setIsDiagLoading(false);
@@ -134,7 +134,7 @@ export function PromptLabPage() {
           Traduce peticiones genéricas en directivas estructuradas y profesionales de UX/UI.
         </p>
         <p className="text-xs uppercase tracking-widest text-v-ink/50 mt-3">
-          Arquitectura: Browser → <span className="font-bold text-v-ink">/api/improve-prompt</span> → Ollama (server-side)
+         Arquitectura: Browser → <span className="font-bold text-v-ink">/api/improve-prompt</span> → OpenRouter (server-side)
         </p>
         <div className="mt-4 flex items-center gap-3">
           <button
@@ -170,12 +170,7 @@ export function PromptLabPage() {
               {diag.success ? 'reachable' : (diag.status ?? 'unreachable')}
               {diag.httpStatus ? ` (HTTP ${diag.httpStatus})` : ''}
             </div>
-            {diag.success && diag.models && diag.models.length > 0 && (
-              <div className="mt-2">
-                <span className="font-bold">Modelos disponibles:</span>{' '}
-                {diag.models.join(', ')}
-              </div>
-            )}
+         
             {diag.error && (
               <div className="mt-2 whitespace-pre-wrap">
                 <span className="font-bold">Detalle:</span> {diag.error}
