@@ -1,18 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Sparkles, Activity } from 'lucide-react';
 import {
   BUILD,
+  ConfigError,
   OLLAMA_MODEL,
-  OllamaError,
+  type OllamaDiagnostic,
   diagnoseOllama,
   generateOptimizedPrompt,
-  type OllamaDiagnostic,
 } from '@/lib/ai-service';
 
 export function PromptLabPage() {
-  const [input, setInput] = useState('hazme una app bonita para vender zapatos');
+  // Textarea starts empty — no preloaded sample. The HTML `placeholder`
+  // attribute is the ONLY thing the user sees when the field is empty.
+  const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState<'config' | 'runtime' | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [diag, setDiag] = useState<OllamaDiagnostic | null>(null);
   const [isDiagLoading, setIsDiagLoading] = useState(false);
@@ -21,6 +26,57 @@ export function PromptLabPage() {
   // is allowed to mutate UI state, so out-of-order resolutions from rapid
   // clicks cannot visually overwrite the most recent request.
   const requestIdRef = useRef(0);
+
+  // Single helper for both auto-diagnose-on-mount and the manual "Test
+  // connection" button. Keeps the "if not-configured, set error" rule
+  // colocated. The diag panel and the main banner both render alongside
+  // each other so the user sees the config error in two places.
+  //
+  // The `isLoading` guard prevents a background /api/tags probe from
+  // overwriting a successful translate result while it's still in flight.
+  // (The probe is a configuration check, NOT a prompt preload — the AI
+  // itself only fires after the user clicks "Traducir a Sistema".)
+  const applyDiagnoseResult = (result: OllamaDiagnostic, isLoading: boolean) => {
+    setDiag(result);
+    if (result.status === 'not-configured' && !isLoading) {
+      setError(result.detail ?? 'VITE_OLLAMA_BASE_URL is not configured.');
+      setErrorKind('config');
+      setOutput('');
+    }
+  };
+
+  // Auto-run the diagnostic on first mount so any configuration error is
+  // visible without the user having to click anything. This is a
+  // GET /api/tags (a model-list probe) — NOT a prompt preload; the AI
+  // body only fires after the user clicks "Traducir a Sistema".
+  useEffect(() => {
+    let cancelled = false;
+    setIsDiagLoading(true);
+    diagnoseOllama()
+      .then((result) => {
+        if (cancelled) return;
+        applyDiagnoseResult(result, isLoading);
+      })
+      .finally(() => {
+        if (!cancelled) setIsDiagLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // isLoading is a stable read from the latest render; we intentionally
+    // run only on mount so a translate-in-flight race never kicks off a
+    // second probe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const runDiagnose = async () => {
+    setIsDiagLoading(true);
+    try {
+      applyDiagnoseResult(await diagnoseOllama(), isLoading);
+    } finally {
+      setIsDiagLoading(false);
+    }
+  };
 
   const handleOptimize = async () => {
     if (!input.trim()) return;
@@ -35,15 +91,20 @@ export function PromptLabPage() {
       if (myId !== requestIdRef.current) return;
       setOutput(result.optimizedPrompt);
       setError('');
+      setErrorKind(null);
     } catch (err) {
       if (myId !== requestIdRef.current) return;
-      const message =
-        err instanceof OllamaError
-          ? err.message
-          : err instanceof Error
+      if (err instanceof ConfigError) {
+        setError(err.message);
+        setErrorKind('config');
+      } else {
+        const message =
+          err instanceof Error
             ? err.message
             : 'Error inesperado al procesar la solicitud.';
-      setError(message);
+        setError(message);
+        setErrorKind('runtime');
+      }
       setOutput('');
     } finally {
       if (myId === requestIdRef.current) {
@@ -52,15 +113,7 @@ export function PromptLabPage() {
     }
   };
 
-  const handleDiagnose = async () => {
-    setIsDiagLoading(true);
-    try {
-      const result = await diagnoseOllama();
-      if (requestIdRef.current === requestIdRef.current) setDiag(result);
-    } finally {
-      setIsDiagLoading(false);
-    }
-  };
+  const textareaHasContent = input.trim().length > 0;
 
   return (
     <div className="w-full animate-in fade-in duration-500 pb-20">
@@ -78,7 +131,7 @@ export function PromptLabPage() {
         </p>
         <div className="mt-4 flex items-center gap-3">
           <button
-            onClick={handleDiagnose}
+            onClick={runDiagnose}
             disabled={isDiagLoading}
             className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-v-bg border-2 border-v-ink hover:bg-v-yellow transition-colors disabled:opacity-50"
           >
@@ -93,7 +146,9 @@ export function PromptLabPage() {
                   ? 'text-v-green'
                   : diag.status === 'timeout'
                     ? 'text-v-yellow'
-                    : 'text-v-red')
+                    : diag.status === 'not-configured'
+                      ? 'text-v-ink'
+                      : 'text-v-red')
               }
               title={`GET ${diag.url}`}
             >
@@ -101,7 +156,9 @@ export function PromptLabPage() {
                 ? '✓ Ollama alcanzable'
                 : diag.status === 'timeout'
                   ? '◯ Timeout'
-                  : `✗ ${diag.status}`}
+                  : diag.status === 'not-configured'
+                    ? '⚠ Sin configurar'
+                    : `✗ ${diag.status}`}
             </span>
           )}
         </div>
@@ -122,7 +179,7 @@ export function PromptLabPage() {
               {diag.httpStatus != null ? ` (HTTP ${diag.httpStatus})` : ''}
             </div>
             {diag.detail && (
-              <div>
+              <div className="mt-2 whitespace-pre-wrap">
                 <span className="font-bold">Detalle:</span> {diag.detail}
               </div>
             )}
@@ -140,17 +197,17 @@ export function PromptLabPage() {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="ej., hazme una app bonita..."
+              placeholder="Escribe aquí tu petición genérica para que el sistema la traduzca a una directiva profesional de UX/UI…"
               className="flex-1 resize-none text-2xl font-medium p-0 border-0 bg-transparent focus:ring-0 outline-none placeholder:text-v-ink/30"
             />
           </div>
           <button
             onClick={handleOptimize}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !textareaHasContent}
             className="w-full py-6 text-xl font-bold uppercase tracking-widest bg-v-ink hover:bg-v-blue text-white transition-colors flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed border-t-2 border-v-ink"
           >
             {isLoading ? 'Procesando...' : 'Traducir a Sistema'}
-            {!isLoading && <ArrowRight className="w-6 h-6" />}
+            {!isLoading && textareaHasContent && <ArrowRight className="w-6 h-6" />}
           </button>
         </div>
 
@@ -162,9 +219,18 @@ export function PromptLabPage() {
 
           <div className="flex-1 p-6 overflow-y-auto">
             {error ? (
-              <div className="border-2 border-v-red bg-v-red/10 p-4 text-v-ink">
+              <div
+                className={
+                  'border-2 p-4 text-v-ink ' +
+                  (errorKind === 'config'
+                    ? 'border-v-ink bg-v-yellow/30'
+                    : 'border-v-red bg-v-red/10')
+                }
+              >
                 <p className="text-sm font-bold uppercase tracking-widest mb-2">
-                  Error del modelo local
+                  {errorKind === 'config'
+                    ? 'Configuración del modelo local'
+                    : 'Error del modelo local'}
                 </p>
                 <p className="text-base leading-relaxed whitespace-pre-wrap">{error}</p>
               </div>
