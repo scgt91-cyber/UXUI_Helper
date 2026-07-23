@@ -1,14 +1,12 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  // VITE_OLLAMA_BASE_URL is REQUIRED at runtime — `resolveOllamaBaseUrl()` in
-  // src/lib/ai-service.ts throws ConfigError if it's missing. We type it as
-  // non-optional so consumers see it as always-present after Vite's build-time
-  // replace (an unset var emits `undefined` in the bundle, which the runtime
-  // resolver still rejects).
-  readonly VITE_OLLAMA_BASE_URL: string;
-  readonly VITE_OLLAMA_MODEL?: string;
-  readonly VITE_OLLAMA_TIMEOUT_MS?: string;
+  // The frontend never talks to Ollama directly. All requests go through
+  // a Vercel Serverless Function under /api/* (see api/improve-prompt.ts
+  // and api/health.ts), which reads the upstream Ollama env vars
+  // server-side. No upstream-server env is ever baked into the client
+  // bundle.
+  readonly VITE_API_BASE_URL?: string;
 }
 
 interface ImportMeta {
