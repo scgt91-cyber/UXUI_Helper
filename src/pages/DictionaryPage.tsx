@@ -1,4 +1,3 @@
-import React from 'react';
 import { dictionaryData, Term } from '@/data/dictionary';
 import { cn } from '@/lib/utils';
 import { VisualExample } from '@/components/VisualExample';

@@ -175,7 +175,7 @@ function apiUrl(path: string): string {
  * a heading and let the user retry when appropriate.
  *
  * Retries: NOT implemented in the browser. The backend is idempotent
- * for a given { prompt } input (deterministic at temperature 0.2 — even
+ * for a given { prompt } input (deterministic at temperature 0.3 — even
  * though not strictly guaranteed, going around the user-visible
  * surface would just hide the failure). The UI exposes a manual retry
  * via the existing button click.
@@ -318,97 +318,3 @@ export async function generateOptimizedPrompt(
   return { optimizedPrompt: envelope.prompt };
 }
 
-/* -------------------------------------------------------------------------- */
-/* Backend diagnostic                                                         */
-/* -------------------------------------------------------------------------- */
-
-export interface BackendHealth {
-  success: boolean;
-  // Coarse-grained state for the UI chip:
-  //   'reachable'      - 200/204 from OPTIONS, route exists, CORS passes
-  //   'timeout'        - diagnostic timer aborted the probe
-  //   'network'        - fetch threw (DNS, CORS, offline, wrong host)
-  //   'config-missing' - backend replied but didn't look like ours
-  //   'http_<num>'     - backend replied with that HTTP status
-  status?: string;
-  error?: string;
-  backendRoute: string;
-  browserOrigin: string;
-  httpStatus: number;
-  method: 'OPTIONS';
-}
-
-/**
- * Probes the backend with an OPTIONS request — the same shape the
- * browser sends as a CORS preflight. This catches the entire class of
- * "the function is unreachable because the bundle was hosted on a
- * different origin" bug that produced the user's 405 error: now the
- * UI chip will read "✗ HTTP 405" instead of falsely saying
- * "✓ Backend conectado".
- *
- * The previous version of this function was a static lie (always
- * returned success: true with no network call) — that was the actual
- * reason the user could not self-diagnose the 405 issue from inside
- * the app.
- */
-export async function diagnoseBackend(): Promise<BackendHealth> {
-  const browserOrigin =
-    typeof window !== 'undefined' ? window.location.origin : '(server)';
-
-  const finalUrl = apiUrl('/api/improve-prompt');
-
-  if (typeof window === 'undefined') {
-    return {
-      success: false,
-      status: 'config-missing',
-      error: 'diagnoseBackend() must be called in the browser',
-      backendRoute: finalUrl,
-      browserOrigin,
-      httpStatus: 0,
-      method: 'OPTIONS',
-    };
-  }
-
-  // 4s is generous in practice — a healthy backend round-trips OPTIONS
-  // in <500ms. The 4s cap bounds the worst-case UX cost of a slow
-  // origin resolution: in the previously-broken wrong-origin case,
-  // the chip would otherwise linger in loading state for seconds.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 4_000);
-  try {
-    const res = await fetch(finalUrl, {
-      method: 'OPTIONS',
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    // res.ok is true for any 2xx (200-299), which already covers the
-    // function's preflight response. No special-casing for 204 needed.
-    const reachable = res.ok;
-    return {
-      success: reachable,
-      status: reachable ? 'reachable' : `http_${res.status}`,
-      error: reachable
-        ? undefined
-        : `HTTP ${res.status} on OPTIONS ${finalUrl}`,
-      backendRoute: finalUrl,
-      browserOrigin,
-      httpStatus: res.status,
-      method: 'OPTIONS',
-    };
-  } catch (err) {
-    clearTimeout(timer);
-    const isAbort = (err as { name?: string } | null)?.name === 'AbortError';
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      success: false,
-      status: isAbort ? 'timeout' : 'network',
-      error: isAbort
-        ? `Timeout al contactar el backend en ${finalUrl}`
-        : `No se pudo contactar el backend (${finalUrl}): ${msg}`,
-      backendRoute: finalUrl,
-      browserOrigin,
-      httpStatus: 0,
-      method: 'OPTIONS',
-    };
-  }
-}

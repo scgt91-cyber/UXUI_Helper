@@ -39,3 +39,8 @@ build
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Runtime state (should never be committed)
+.freebuff/                  # Freebuff desktop SQLite WAL files
+metadata.json               # Freebuff agent runtime metadata (regenerated per session)
+uxui-ai-helper-api/         # abandoned leftover scaffold directory
