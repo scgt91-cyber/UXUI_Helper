@@ -1,11 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Sparkles, Activity } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import {
   BUILD,
   BackendError,
   type BackendErrorKind,
-  type BackendHealth,
-  diagnoseBackend,
   generateOptimizedPrompt,
 } from '@/lib/ai-service';
 
@@ -17,8 +15,6 @@ export function PromptLabPage() {
   const [error, setError] = useState('');
   const [errorKind, setErrorKind] = useState<BackendErrorKind | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [diag, setDiag] = useState<BackendHealth | null>(null);
-  const [isDiagLoading, setIsDiagLoading] = useState(false);
 
   // Increments on every handleOptimize call. Only the latest in-flight
   // request is allowed to mutate UI state, so out-of-order resolutions
@@ -40,36 +36,6 @@ export function PromptLabPage() {
         return 'Sin conexión con el servidor';
       default:
         return 'Error';
-    }
-  };
-
-  // Auto-run the diagnostic on first mount so any backend / upstream
-  // failure is visible without the user having to click anything. This
- // is a backend diagnostic — NOT a prompt preload;
-  // the AI body only fires after the user clicks "Traducir a Sistema".
-  useEffect(() => {
-    let cancelled = false;
-    setIsDiagLoading(true);
-    diagnoseBackend()
-      .then((result) => {
-        if (cancelled) return;
-        setDiag(result);
-      })
-      .finally(() => {
-        if (!cancelled) setIsDiagLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const runDiagnose = async () => {
-    setIsDiagLoading(true);
-    try {
-      const diagResult = await diagnoseBackend();
-      setDiag(diagResult);
-    } finally {
-      setIsDiagLoading(false);
     }
   };
 
@@ -109,20 +75,6 @@ export function PromptLabPage() {
   };
 
   const textareaHasContent = input.trim().length > 0;
-  const diagChipClass = (() => {
-    if (!diag) return '';
-    if (diag.success) return 'text-v-green';
-    if (diag.status === 'timeout') return 'text-v-yellow';
-    if (diag.status === 'config-missing') return 'text-v-ink';
-    return 'text-v-red';
-  })();
-  const diagChipText = (() => {
-    if (!diag) return '';
-    if (diag.success) return '✓ Backend conectado';
-    if (diag.status === 'timeout') return '◯ Timeout';
-    if (diag.status === 'config-missing') return '⚠ Backend sin configurar';
-    return `✗ ${diag.status ?? 'unreachable'}`;
-  })();
 
   return (
     <div className="w-full animate-in fade-in duration-500 pb-20">
@@ -133,51 +85,6 @@ export function PromptLabPage() {
         <p className="text-xl md:text-2xl font-medium max-w-3xl">
           Traduce peticiones genéricas en directivas estructuradas y profesionales de UX/UI.
         </p>
-        <p className="text-xs uppercase tracking-widest text-v-ink/50 mt-3">
-         Arquitectura: Browser → <span className="font-bold text-v-ink">/api/improve-prompt</span> → OpenRouter (server-side)
-        </p>
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            onClick={runDiagnose}
-            disabled={isDiagLoading}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-v-bg border-2 border-v-ink hover:bg-v-yellow transition-colors disabled:opacity-50"
-          >
-            <Activity className="w-4 h-4" />
-            {isDiagLoading ? 'Probando…' : 'Probar Conexión con el Backend'}
-          </button>
-          {diag && (
-            <span
-              className={`text-xs font-bold uppercase tracking-widest ${diagChipClass}`}
-              title={diag.error ?? diag.status ?? 'unknown'}
-            >
-              {diagChipText}
-            </span>
-          )}
-        </div>
-        {diag && (
-          <div className="mt-3 border-2 border-v-ink bg-v-bg/40 p-3 text-xs font-mono leading-relaxed text-v-ink">
-            <div>
-              <span className="font-bold">Ruta del backend:</span> {diag.backendRoute}
-            </div>
-            <div>
-              <span className="font-bold">Método:</span> {diag.method}
-            </div>
-            <div>
-              <span className="font-bold">Origen del navegador:</span> {diag.browserOrigin}
-            </div>
-            <div>
-              <span className="font-bold">Estado:</span>{' '}
-              {diag.success ? 'reachable' : (diag.status ?? 'unreachable')}
-              {diag.httpStatus ? ` (HTTP ${diag.httpStatus})` : ''}
-            </div>
-         
-            {diag.error && (
-              <div className="mt-2 whitespace-pre-wrap">
-                <span className="font-bold">Detalle:</span> {diag.error}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 border-y-2 md:border-2 border-v-ink min-h-[600px] bg-white mx-0 md:mx-8">
