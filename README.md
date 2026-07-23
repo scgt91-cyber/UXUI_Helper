@@ -194,6 +194,87 @@ from your browser. The browser only sees `https://<your-vercel-app>.vercel.app`
 when the SPA loads — public-internet traffic is what the function makes
 to Ollama.
 
+## Production VPS deployment
+
+When running Ollama on a dedicated VPS (rather than a tunnel from a dev
+machine), put a TLS-terminating reverse proxy in front of the daemon —
+Ollama itself speaks plain HTTP only — and point `OLLAMA_BASE_URL` at
+the proxy's https URL.
+
+Minimal Caddyfile (drop in `/etc/caddy/Caddyfile` on the VPS, then
+`systemctl reload caddy`):
+
+```
+ollama.your-vps.example {
+  reverse_proxy 127.0.0.1:11434
+  encode zstd gzip
+}
+```
+
+Minimal Nginx equivalent:
+
+```
+server {
+  listen 443 ssl http2;
+  server_name ollama.your-vps.example;
+
+  ssl_certificate     /etc/letsencrypt/live/ollama.your-vps.example/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/ollama.your-vps.example/privkey.pem;
+
+  location / {
+    proxy_pass         http://127.0.0.1:11434;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+    proxy_read_timeout 180s;
+    client_max_body_size 8m;
+  }
+}
+```
+
+Hardening checklist for the VPS:
+
+1. **HTTPS scheme is enforced server-side.** When `VERCEL_ENV` is
+   `production` or `preview`, the function refuses any
+   `http://…OLLAMA_BASE_URL` value with a 500 + log entry. The escape
+   hatch is `OLLAMA_INSECURE=true` (logged with a warning) and is meant
+   only for short-lived diagnostic deploys.
+2. **Tight the daemon to loopback.** Bind Ollama to `127.0.0.1:11434`
+   (`OLLAMA_HOST=127.0.0.1 ollama serve`) so the proxy is the only path
+   in.
+3. **Lock down the proxy with an allowlist or shared secret.** Vercel's
+   edge IP ranges change, so pinning to them is brittle — prefer a
+   shared-secret header passed via your proxy's auth layer (e.g. Caddy
+   `basicauth` with a randomly-rotated token).
+4. **Set `OLLAMA_ORIGINS` on the daemon** to the Vercel deployment host
+   (or `*` if you accept the trade-off) so `/api/generate` doesn't
+   refuse the cross-origin call from the function.
+5. **Firewall the VPS** so port 11434 is unreachable from the public
+   internet — only the proxy's 443 is exposed.
+6. **Raise `OLLAMA_TIMEOUT_MS` if you serve large models.** The function
+   itself caps at 60s (`maxDuration` in `api/improve-prompt.ts`); set
+   `OLLAMA_TIMEOUT_MS` slightly below that (e.g. `55000`) so the abort
+   races the function limit cleanly.
+
+Request flow on a real production deploy:
+
+```
+Browser                Vercel Frontend            Function           VPS Proxy       Daemon
+   │                         │                        │                   │              │
+   │ ─── POST /api/improve-prompt ───────────────────────────────────► │              │
+   │   { "prompt": "…" }       │                        │                   │              │
+   │                          │ ─── verify PostJson (Content-Type) ───►  │              │
+   │                          │ ─── validate 400 / 405 / 500 gates ──► │              │
+   │                          │                       │                  │              │
+   │                          │                       │ ─── POST https://ollama.your-vps.example/api/generate ► │
+   │                          │                       │                  │ ── POST /api/generate ──► │
+   │                          │                       │                  │              │
+   │                          │                       │ ◄─── { "response": "{…optimizedPrompt…}" } ────│
+   │                          │ ◄─── { success: true, prompt: "…" } ─── │              │
+   │ ◄─── 200 OK + envelope ──── │                        │                  │              │
+```
+
 ## How the model knows when to retry
 
 There is **no automatic retry in the client**. If a request hits 502

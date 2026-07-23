@@ -24,9 +24,18 @@
  *   200 — success
  *   400 — empty / missing / oversized prompt (validation)
  *   405 — wrong HTTP method
- *   500 — unhandled exception (server-side crash) or missing env
+ *   500 — unhandled exception (server-side crash), missing env, or
+ *         OLLAMA_BASE_URL scheme misconfigured (must be https in prod)
  *   502 — Ollama unreachable or returned non-2xx (upstream)
  *   504 — Ollama took too long (timeout)
+ *
+ * Production-runtime hardening:
+ *   When VERCEL_ENV is "production" or "preview", OLLAMA_BASE_URL MUST
+ *   be an https:// URL. Plain http:// is refused with a server-side log
+ *   entry so an operator can't silently fall back to plaintext when an
+ *   SSL certificate misconfig makes a tunnel fail. The escape hatch
+ *   OLLAMA_INSECURE=true is honored (logged with a warning) for local
+ *   development through `vercel dev` against an unencrypted VPS tunnel.
  *
  * CORS: permissive on purpose (the API is read-only and pure
  * generation, no cookies, no auth tokens).
@@ -60,6 +69,67 @@ const OLLAMA_TIMEOUT_MS = (() => {
 // Hard cap on accepted prompt size so a malicious caller can't blow
 // out the 60s function timeout with a 1MB body. ~1,000–1,200 tokens.
 const MAX_PROMPT_CHARS = 5_000;
+
+/* -------------------------------------------------------------------------- */
+/* Production-runtime hardening — refuse plain http:// against the upstream   */
+/* model when running on a real Vercel deployment (production or preview).    */
+/* HTTPS is the only acceptable transport for a VPS-hosted Ollama daemon     */
+/* because prompts carry proprietary technical intent.                       */
+/* -------------------------------------------------------------------------- */
+
+const VERCEL_ENV = (process.env.VERCEL_ENV ?? '').trim();
+const IS_PRODUCTION_RUNTIME =
+  VERCEL_ENV === 'production' || VERCEL_ENV === 'preview';
+const OLLAMA_INSECURE_OPT_IN =
+  (process.env.OLLAMA_INSECURE ?? '').trim().toLowerCase() === 'true';
+
+type UrlValidation =
+  | { tag: 'ok'; url: URL }
+  | { tag: 'invalid'; reason: string };
+
+function validateOllamaUrl(raw: string): UrlValidation {
+  if (!raw) {
+    return { tag: 'invalid', reason: 'OLLAMA_BASE_URL is empty' };
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { tag: 'invalid', reason: 'OLLAMA_BASE_URL is not a parseable URL' };
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return {
+      tag: 'invalid',
+      reason: `OLLAMA_BASE_URL must use http(s); got '${parsed.protocol}'`,
+    };
+  }
+  if (IS_PRODUCTION_RUNTIME && parsed.protocol === 'http:' && !OLLAMA_INSECURE_OPT_IN) {
+    return {
+      tag: 'invalid',
+      reason:
+        'OLLAMA_BASE_URL must use https in production / preview. Set OLLAMA_INSECURE=true to override (not recommended).',
+    };
+  }
+  // In production runtime, loopback hostnames are unreachable from a
+  // Vercel function — refuse them so an operator doesn't wait 60s for a
+  // doomed connection instead of seeing a fast config error.
+  if (IS_PRODUCTION_RUNTIME) {
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '::1') {
+      return {
+        tag: 'invalid',
+        reason: `OLLAMA_BASE_URL uses loopback hostname "${host}" — unreachable from a Vercel function in production. Point it at the public HTTPS URL of your VPS Ollama / tunnel.`,
+      };
+    }
+  }
+  if (OLLAMA_INSECURE_OPT_IN && IS_PRODUCTION_RUNTIME) {
+    log('warn', 'ollama_insecure_opt_in', {
+      env: 'OLLAMA_INSECURE=true',
+      hint: 'Plaintext transport is enabled against the upstream Ollama daemon.',
+    });
+  }
+  return { tag: 'ok', url: parsed };
+}
 
 /* -------------------------------------------------------------------------- */
 /* System prompt — owns the model's persona                                   */
@@ -171,20 +241,26 @@ type UpstreamResult =
     };
 
 async function callOllama(userPrompt: string): Promise<UpstreamResult> {
-  if (!OLLAMA_BASE_URL) {
+  const urlCheck = validateOllamaUrl(OLLAMA_BASE_URL);
+  if (urlCheck.tag === 'invalid') {
+    log('error', 'ollama_url_invalid', { detail: urlCheck.reason });
     return {
       tag: 'failure',
       kind: 'upstream',
-      upstreamHttpStatus: 502,
-      detail: 'Server misconfiguration: OLLAMA_BASE_URL is not set on the server.',
+      upstreamHttpStatus: 500,
+      detail: `Server misconfiguration: ${urlCheck.reason}`,
     };
   }
+  // After validation the upstream URL has been verified to be either
+  // https (in production) or http/https (in dev) — never a typo or
+  // bare hostname that would 404 silently.
+  const upstreamBaseUrl = urlCheck.url.toString().replace(/\/+$/, '');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    const response = await fetch(`${upstreamBaseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
