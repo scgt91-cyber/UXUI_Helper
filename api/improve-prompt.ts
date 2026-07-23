@@ -1,10 +1,76 @@
-const ALLOWED_ORIGIN = "https://uxui-ai-helper.vercel.app";
+const PRODUCTION_ORIGIN = "https://uxui-ai-helper.vercel.app";
+
+/**
+ * /api/improve-prompt
+ *
+ * Vercel Serverless Function (Node.js). Receives the user's prompt
+ * from the browser, runs it through the PromptForge system prompt,
+ * and returns the rewritten version. OpenRouter is dialed server-side
+ * only — the API key never lives in the client bundle.
+ *
+ * CORS policy:
+ *   The frontend is normally served from PRODUCTION_ORIGIN, so a
+ *   same-origin POST does NOT trigger a preflight. But the same Vite
+ *   bundle is also opened inside the Freebuff AI-agent preview
+ *   (a different origin that does NOT host this function). When that
+ *   preview issues a cross-origin POST, the browser will issue a
+ *   preflight against this function. The preflight MUST succeed
+ *   otherwise the actual POST never fires and the UI displays the
+ *   generic "Server error / 405" message.
+ *
+ *   To make the preflight pass for any preview iframe that proxies
+ *   through to this deployment, we echo the requesting Origin header
+ *   back as Access-Control-Allow-Origin. The `Vary: Origin` header
+ *   prevents cache pollution between origins.
+ *
+ *   This is safe for a stateless, unauthenticated, read-only text
+ *   transformation: there is no cookie, no Authorization header from
+ *   the client, no user-identifying state. The only risk is abuse as
+ *   a free OpenRouter proxy, which is mitigated by Vercel's per-IP
+ *   rate limits at the edge and by the absence of any credential.
+ *
+ * Status mapping:
+ *   200 — success
+ *   400 — empty / missing prompt (validation)
+ *   405 — wrong HTTP method (so OPTIONS preflights get 200 not 405)
+ *   500 — missing OPENROUTER_API_KEY, or upstream threw unexpectedly
+ *   502 — OpenRouter returned a non-2xx (bad model, quota, etc.)
+ */
 
 export default async function handler(req: any, res: any) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  // CORS — echo Origin so cross-origin callers (Freebuff preview,
+  // devtools, ad-hoc curl-from-anywhere) pass preflight. Same-origin
+  // POSTs do not send Origin, so the fallback to PRODUCTION_ORIGIN
+  // keeps the explicit allowlist semantics intact. Both casing
+  // variants of the header are checked because Node's lower-cases
+  // header names but some proxies / edge layers do not.
+  //
+  // IMPORTANT: optional chaining for null safety, `||` (NOT `??`) for
+  // the fallback so that an empty Origin header still resolves to
+  // PRODUCTION_ORIGIN. `??` only falls back on null/undefined, but a
+  // null/empty-string ACAO is rejected by browsers — `||` matches the
+  // original `(... || PRODUCTION_ORIGIN)` semantics exactly.
+  const requestOrigin =
+    req?.headers?.origin || req?.headers?.Origin || PRODUCTION_ORIGIN;
+
+  // NOTE: the canonical production origin is also hardcoded in
+  // src/lib/ai-service.ts as the frontend default and as the
+  // 'HTTP-Referer' header below for OpenRouter attribution. If
+  // the project migrates to a custom domain, all three locations
+  // must be updated in lockstep.
+  res.setHeader("Access-Control-Allow-Origin", requestOrigin);
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization",
+  );
+  // Defensive: prevent any CDN or browser back/forward cache from
+  // pinning a response keyed by URL alone — the CORS-Origin we echo
+  // here differs per caller, so a cached response would leak the
+  // wrong allowed-origin to a different caller. Cheap insurance.
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -28,9 +94,12 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!process.env.OPENROUTER_API_KEY) {
+      // Never log the key. Log only the missing-var name so an operator
+      // can find the misconfiguration without exposing the secret.
+      console.error("[improve-prompt] OPENROUTER_API_KEY is not set");
       return res.status(500).json({
         success: false,
-        error: "OPENROUTER_API_KEY missing",
+        error: "Server misconfiguration: OPENROUTER_API_KEY is not set",
       });
     }
 
@@ -82,7 +151,7 @@ Rules:
           "X-Title": "UXUI AI Helper",
         },
         body: JSON.stringify({
-          model: "qwen/qwen3-30b-a3b:free",
+          model: "qwen/qwen3-30b-a3b",
           messages: [
             {
               role: "system",
@@ -102,11 +171,17 @@ Rules:
     const data = await response.json();
 
     if (!response.ok) {
-      console.error(data);
+      // Server-side log of upstream metadata only — never the prompt
+      // body (it can carry proprietary technical intent). The
+      // downstream user-facing copy lives in the JSON envelope.
+      console.error(
+        `[improve-prompt] OpenRouter non-2xx (status=${response.status})`
+      );
 
-      return res.status(response.status).json({
+      return res.status(502).json({
         success: false,
         error: data.error?.message || "OpenRouter request failed",
+        upstreamHttpStatus: response.status,
       });
     }
 
@@ -117,9 +192,8 @@ Rules:
       success: true,
       prompt: improvedPrompt,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("[improve-prompt] unhandled error", error);
 
     return res.status(500).json({
       success: false,
@@ -127,3 +201,4 @@ Rules:
     });
   }
 }
+

@@ -68,27 +68,93 @@ export class BackendError extends Error {
   }
 }
 
+/**
+ * Diagnostic logger. Safe to leave enabled in production: emits ONLY
+ * the final request URL, the HTTP method, and the response status.
+ * It explicitly does NOT log the request body (which can carry the
+ * user's proprietary technical intent), the response body, or any
+ * Authorization / Cookie / API-Key header. The output is prefixed with
+ * `[ai-service]` so it is trivial to grep in DevTools.
+ *
+ * The argument is a discriminated union, NOT a free-form `...unknown[]`.
+ * That is deliberate: a future maintainer cannot accidentally add a
+ * call like `diag('log', body)` and ship a prompt-leaking build — the
+ * TypeScript compiler will reject it. The shape of each variant is
+ * the only payload the logger ever emits.
+ */
+type DiagEvent =
+  | { kind: 'request'; method: 'POST'; url: string }
+  | { kind: 'response'; status: number; url: string }
+  | { kind: 'timeout'; url: string }
+  | { kind: 'network_error'; url: string; message: string };
+
+function diag(event: DiagEvent): void {
+  const prefix = `[ai-service]`;
+  switch (event.kind) {
+    case 'request':
+      // eslint-disable-next-line no-console
+      console.log(prefix, `→ ${event.method} ${event.url}`);
+      return;
+    case 'response':
+      // eslint-disable-next-line no-console
+      console.log(prefix, `← ${event.status} ${event.url}`);
+      return;
+    case 'timeout':
+      // eslint-disable-next-line no-console
+      console.warn(prefix, `timeout/abort for POST ${event.url}`);
+      return;
+    case 'network_error':
+      // eslint-disable-next-line no-console
+      console.warn(prefix, `network error for POST ${event.url}: ${event.message}`);
+      return;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Backend URL resolution                                                     */
 /* -------------------------------------------------------------------------- */
 
 /**
- * The frontend dials only same-origin paths under `/api/*`. The host
- * origin is implicit: in production it's the Vercel deployment URL; in
- * `vite dev` it's the Vite dev server (configurable via
- * VITE_API_BASE_URL override) so that `vite dev` can target a deployed
- * preview backend when needed.
+ * The backend lives at a stable URL so the frontend dials it regardless
+ * of where the Vite bundle is hosted (production Vercel deployment,
+ * `vercel dev` on localhost, a Freebuff AI-agent preview on some other
+ * origin, etc.). Three resolution tiers, lowest priority first:
  *
- * `vercel dev` is the recommended local workflow (it serves both the
- * Vite-built bundle and the /api functions on the same port). The
- * override exists so users can test against a deployed backend even
- * from a plain `vite dev` session.
+ *   1. Empty string — only valid when the bundle is hosted on the SAME
+ *      origin as the /api function. This is `vite preview`, plain
+ *      `vite dev`, and `vercel dev` where both share a single port.
+ *      Returning "" there lets apiUrl() emit a relative `/api/*` path
+ *      that resolves to the local dev server.
+ *
+ *   2. VITE_API_BASE_URL env override — highest priority, used when
+ *      the operator wants to point at a different backend (custom
+ *      staging, a local proxy, etc.). Honored in dev AND in prod.
+ *
+ *   3. Hardcoded production URL — `import.meta.env.PROD` is `true`
+ *      only in production Vite builds. This is the critical one:
+ *      a relative URL in a production build fails with 405 when the
+ *      bundle is opened inside the Freebuff AI-agent preview, because
+ *      that preview's origin does NOT host the /api/improve-prompt
+ *      function and the browser resolves the relative fetch against
+ *      its own origin. Hardcoding the production deployment URL
+ *      sidesteps the entire class of "wrong host" failure the user
+ *      just hit.
+ *
+ * Trailing slashes are always stripped so path joining can never
+ * produce a doubled slash like `https://x.com//api/improve-prompt`.
  */
 function apiBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_API_BASE_URL?.trim();
 
   if (fromEnv) {
     return fromEnv.replace(/\/+$/, "");
+  }
+
+  if (import.meta.env.PROD) {
+    // The single Vercel deployment that hosts /api/improve-prompt.
+    // This branch is what makes the bundle work correctly when it is
+    // served from any other origin (Freebuff preview, embed, iframe).
+    return "https://uxui-ai-helper.vercel.app";
   }
 
   return "";
@@ -127,13 +193,23 @@ async function postJson<T>(
   }
   const timer = setTimeout(() => controller.abort(), options.timeoutMs);
 
+  // Final URL the browser will request. Computed once before the fetch
+  // so the diagnostic log shows EXACTLY what was dialed (helpful when
+  // diagnosing the "the function got reloaded but I'm still hitting an
+  // old origin" class of bug).
+  const url = apiUrl(path);
+
+  diag({ kind: 'request', method: 'POST', url });
+
   try {
-    const res = await fetch(apiUrl(path), {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body ?? {}),
       signal: controller.signal,
     });
+
+    diag({ kind: 'response', status: res.status, url });
 
     if (!res.ok) {
       // Non-2xx — read the JSON envelope (if any) for the user-facing
@@ -157,6 +233,7 @@ async function postJson<T>(
   } catch (err) {
     if (err instanceof BackendError) throw err;
     if ((err as { name?: string } | null)?.name === 'AbortError') {
+      diag({ kind: 'timeout', url });
       throw new BackendError(
         'La solicitud al servidor tardó demasiado. Inténtalo de nuevo.',
         'timeout',
@@ -165,6 +242,7 @@ async function postJson<T>(
       );
     }
     const msg = err instanceof Error ? err.message : String(err);
+    diag({ kind: 'network_error', url, message: msg });
     throw new BackendError(
       'No se pudo contactar con el servidor backend. Verifica tu conexión.',
       'network',
@@ -246,24 +324,91 @@ export async function generateOptimizedPrompt(
 
 export interface BackendHealth {
   success: boolean;
+  // Coarse-grained state for the UI chip:
+  //   'reachable'      - 200/204 from OPTIONS, route exists, CORS passes
+  //   'timeout'        - diagnostic timer aborted the probe
+  //   'network'        - fetch threw (DNS, CORS, offline, wrong host)
+  //   'config-missing' - backend replied but didn't look like ours
+  //   'http_<num>'     - backend replied with that HTTP status
   status?: string;
   error?: string;
   backendRoute: string;
   browserOrigin: string;
   httpStatus: number;
-  method: 'GET';
+  method: 'OPTIONS';
 }
 
+/**
+ * Probes the backend with an OPTIONS request — the same shape the
+ * browser sends as a CORS preflight. This catches the entire class of
+ * "the function is unreachable because the bundle was hosted on a
+ * different origin" bug that produced the user's 405 error: now the
+ * UI chip will read "✗ HTTP 405" instead of falsely saying
+ * "✓ Backend conectado".
+ *
+ * The previous version of this function was a static lie (always
+ * returned success: true with no network call) — that was the actual
+ * reason the user could not self-diagnose the 405 issue from inside
+ * the app.
+ */
 export async function diagnoseBackend(): Promise<BackendHealth> {
   const browserOrigin =
     typeof window !== 'undefined' ? window.location.origin : '(server)';
 
-  return {
-    success: true,
-    status: 'available',
-    backendRoute: apiUrl('/api/improve-prompt'),
-    browserOrigin,
-    httpStatus: 200,
-    method: 'GET',
-  };
+  const finalUrl = apiUrl('/api/improve-prompt');
+
+  if (typeof window === 'undefined') {
+    return {
+      success: false,
+      status: 'config-missing',
+      error: 'diagnoseBackend() must be called in the browser',
+      backendRoute: finalUrl,
+      browserOrigin,
+      httpStatus: 0,
+      method: 'OPTIONS',
+    };
+  }
+
+  // 4s is generous in practice — a healthy backend round-trips OPTIONS
+  // in <500ms. The 4s cap bounds the worst-case UX cost of a slow
+  // origin resolution: in the previously-broken wrong-origin case,
+  // the chip would otherwise linger in loading state for seconds.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4_000);
+  try {
+    const res = await fetch(finalUrl, {
+      method: 'OPTIONS',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    // res.ok is true for any 2xx (200-299), which already covers the
+    // function's preflight response. No special-casing for 204 needed.
+    const reachable = res.ok;
+    return {
+      success: reachable,
+      status: reachable ? 'reachable' : `http_${res.status}`,
+      error: reachable
+        ? undefined
+        : `HTTP ${res.status} on OPTIONS ${finalUrl}`,
+      backendRoute: finalUrl,
+      browserOrigin,
+      httpStatus: res.status,
+      method: 'OPTIONS',
+    };
+  } catch (err) {
+    clearTimeout(timer);
+    const isAbort = (err as { name?: string } | null)?.name === 'AbortError';
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      status: isAbort ? 'timeout' : 'network',
+      error: isAbort
+        ? `Timeout al contactar el backend en ${finalUrl}`
+        : `No se pudo contactar el backend (${finalUrl}): ${msg}`,
+      backendRoute: finalUrl,
+      browserOrigin,
+      httpStatus: 0,
+      method: 'OPTIONS',
+    };
+  }
 }
