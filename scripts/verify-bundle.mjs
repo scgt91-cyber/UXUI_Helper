@@ -19,6 +19,15 @@
  * Ollama. The browser bundle (including sourcemaps) must NEVER contain
  * any of the patterns above.
  *
+ * LIMITATIONS — the static guard is best-effort, not exhaustive. It
+ * does NOT catch runtime-assembled paths (e.g. `'/api/' + 'generate'`,
+ * `String.fromCharCode(...)`, template-literal interpolation with
+ * separate chunks). A future PR must not bypass the firewall by
+ * constructing the Ollama URL on the client via any such indirection.
+ * The second line of defense is CODE REVIEW — every PR touching the
+ * network paths or env-var surface must be reviewed against the rule
+ * "the client never builds an Ollama URL".
+ *
  * Exits 0 with a ✅ summary if clean; exits 1 with a per-file report if any
  * pattern leaks.
  */
