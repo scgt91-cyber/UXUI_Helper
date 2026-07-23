@@ -32,16 +32,17 @@ const DIST = join(ROOT, 'dist');
 // Patterns that MUST NOT appear in the client bundle (incl. sourcemaps).
 //
 // Notes on regex shape:
+// - The VITE_OLLAMA_* check uses a single prefix regex so any current or
+//   future variable name (VITE_OLLAMA_BASE_URL, _MODEL, _TIMEOUT, _FOO,
+//   …) is caught — the bundle must NEVER depend on any Ollama env var.
 // - No quote requirement for /api/* paths — covers string-concatenation
 //   leaks (`'/api/' + 'generate'`), template literals, and bare strings.
-// - /OLLAMA_BASE_URL/ matches the bare env-var name. We exclude this very
-//   script's basename from the scan below to avoid self-trigger.
+// - /OLLAMA_BASE_URL/ matches the bare server env-var name (catches
+//   future-named variants too).
 // - Loopback URL pattern is anchored with optional scheme so it matches
 //   both "127.0.0.1:11434" and "http://127.0.0.1:11434".
 const FORBIDDEN = [
-  { label: 'VITE_OLLAMA_BASE_URL', pattern: /VITE_OLLAMA_BASE_URL/g },
-  { label: 'VITE_OLLAMA_MODEL',    pattern: /VITE_OLLAMA_MODEL/g },
-  { label: 'VITE_OLLAMA_TIMEOUT',  pattern: /VITE_OLLAMA_TIMEOUT/g },
+  { label: 'VITE_OLLAMA_* (any Vite-prefixed Ollama env var)', pattern: /VITE_OLLAMA_\w+/g },
   { label: 'bare OLLAMA_BASE_URL (server env, must not be in bundle)', pattern: /OLLAMA_BASE_URL/g },
   { label: 'hardcoded loopback Ollama URL (e.g. 127.0.0.1:11434)', pattern: /(?:https?:\/\/)?(?:127\.0\.0\.1|localhost|0\.0\.0\.0):11434/gi },
   // /api/generate and /api/tags are Ollama routes meant for the
@@ -54,13 +55,6 @@ const FORBIDDEN = [
 
 /** Extensions to scan, including sourcemaps so source comments don't leak. */
 const SCAN_EXT = /\.(js|mjs|cjs|html|css|map|json)$/;
-
-/**
- * Files inside the dist tree that we intentionally skip (this script's
- * own content lives outside `dist/` so it never needs to be excluded
- * by name in the scan; this hook remains in case of future inlining).
- */
-const IGNORE_FILES = new Set();
 
 /** Recursively collect every regular file under `dir`. */
 async function walk(dir) {
@@ -91,9 +85,7 @@ async function main() {
   }
 
   const allFiles = await walk(DIST);
-  const files = allFiles.filter(
-    (p) => SCAN_EXT.test(p) && !IGNORE_FILES.has(relative(ROOT, p)),
-  );
+  const files = allFiles.filter((p) => SCAN_EXT.test(p));
 
   const violations = [];
   for (const file of files) {
