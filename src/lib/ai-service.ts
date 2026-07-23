@@ -89,13 +89,12 @@ export class BackendError extends Error {
  */
 function apiBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_API_BASE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/+$/, '');
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return window.location.origin;
+
+  if (fromEnv) {
+    return fromEnv.replace(/\/+$/, "");
   }
-  // SSR / test fallback — Vercel functions run on the same origin as
-  // the page, so this just collapses to relative paths.
-  return '';
+
+  return "https://uxui-ai-helper-api.vercel.app/";
 }
 
 function apiUrl(path: string): string {
