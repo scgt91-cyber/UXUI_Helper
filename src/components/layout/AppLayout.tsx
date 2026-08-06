@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TopNav } from './TopNav';
 import { PromptLabPage } from '@/pages/PromptLabPage';
 import { DictionaryPage } from '@/pages/DictionaryPage';
+import { StylesPage } from '@/pages/StylesPage';
 import { HomePage } from '@/pages/HomePage';
 
 export function AppLayout() {
@@ -13,6 +14,9 @@ export function AppLayout() {
     }
     if (currentPath === 'prompt-lab') {
       return <PromptLabPage />;
+    }
+    if (currentPath === 'styles') {
+      return <StylesPage />;
     }
     return <DictionaryPage categoryId={currentPath} />;
   };

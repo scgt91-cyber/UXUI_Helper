@@ -12,6 +12,7 @@ const navItems = [
   { id: 'ai-assisted', label: 'IA en UX', color: 'hover:text-v-yellow' },
   { id: 'frontend', label: 'Frontend', color: 'hover:text-v-green' },
   { id: 'integration', label: 'Integración', color: 'hover:text-v-red' },
+  { id: 'styles', label: 'Styles', color: 'hover:text-v-blue' },
 ];
 
 export function TopNav({ currentPath, onNavigate }: TopNavProps) {
