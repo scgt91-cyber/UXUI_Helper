@@ -12,8 +12,7 @@ const categoryColors: Record<string, string> = {
   'ai-assisted': 'text-v-yellow border-v-yellow',
   'frontend': 'text-v-green border-v-green',
   'integration': 'text-v-red border-v-red',
-  'ui-components': 'text-v-ink border-v-ink',
-  'macos': 'text-v-blue border-v-blue'
+  'ui-components': 'text-v-ink border-v-ink'
 };
 
 export function DictionaryPage({ categoryId }: DictionaryPageProps) {
@@ -57,6 +56,13 @@ export function DictionaryPage({ categoryId }: DictionaryPageProps) {
     groupedTerms.push({ type: 'group', name: currentGroup!, items: currentGroupItems });
   }
 
+  const slugify = (name: string) =>
+    name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const groupAnchors = groupedTerms
+    .filter((block) => block.type === 'group')
+    .map((block) => ({ name: block.name!, id: slugify(block.name!) }));
+
   return (
     <div className="w-full animate-in fade-in duration-500 pb-20">
       <div className="mb-12 border-b-4 border-v-ink pb-6 px-4 md:px-8 pt-8">
@@ -68,11 +74,28 @@ export function DictionaryPage({ categoryId }: DictionaryPageProps) {
         </p>
       </div>
 
+      {groupAnchors.length >= 2 && (
+        <div className="flex flex-wrap gap-2 px-4 md:px-8 mb-4">
+          {groupAnchors.map((anchor) => (
+            <button
+              key={anchor.id}
+              onClick={() => document.getElementById(anchor.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className={cn(
+                "border-2 border-v-ink px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors",
+                "bg-v-bg hover:bg-v-ink hover:text-v-bg"
+              )}
+            >
+              {anchor.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col px-4 md:px-8">
         {groupedTerms.map((block, index) => {
           if (block.type === 'group') {
             return (
-              <div key={index} className="my-8 p-6 md:p-10 border-4 border-v-ink bg-v-ink/5 relative">
+              <div key={index} id={slugify(block.name!)} className="my-8 p-6 md:p-10 border-4 border-v-ink bg-v-ink/5 relative scroll-mt-28">
                 <div className="absolute -top-4 left-6 md:left-10 bg-v-ink text-white px-4 py-1 font-bold uppercase tracking-widest text-sm">
                   {block.name}
                 </div>

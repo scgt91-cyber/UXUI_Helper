@@ -15,7 +15,7 @@ export interface DictionarySection {
 export const dictionaryData: Record<string, DictionarySection> = {
   'ui-components': {
     title: 'UI Components',
-    description: 'Diccionario estándar de elementos de interfaz. Conocer el nombre exacto de cada componente es el primer paso para construir un Design System robusto y pedir interfaces precisas a la IA.',
+    description: 'Diccionario estándar de elementos de interfaz, incluyendo los componentes nativos de macOS (Apple HIG). Conocer el nombre exacto de cada componente es el primer paso para construir un Design System robusto y pedir interfaces precisas a la IA.',
     terms: [
       {
         term: 'Container / Wrapper',
@@ -398,6 +398,265 @@ export const dictionaryData: Record<string, DictionarySection> = {
         badPrompt: 'Ponle un borde cuando se seleccione el botón.',
         proPrompt: 'Aplica un Focus Ring con :focus-visible (ring-2 ring-v-blue ring-offset-2) a los elementos interactivos, garantizando navegación por teclado visible y cumpliendo WCAG 2.4.7.',
         group: 'Cursor e Interacción (Web)'
+      },
+      {
+        term: 'Menu Bar',
+        definition: 'La barra de menús del sistema en la parte superior de la pantalla (File, Edit, View, Window, Help), disponible en todo momento aunque cambies de app.',
+        badPrompt: 'Pon los menús de Mac arriba en la app.',
+        proPrompt: 'Usa la Menu Bar nativa del sistema (no una barra propia de la app) para comandos estándar como File/Edit/View, y reserva el toolbar para acciones contextuales.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Menu Bar Extra (Status Item)',
+        definition: 'Iconos y controles que viven en el lado derecho de la Menu Bar del sistema (junto al reloj), como Wi-Fi, batería o los utilitarios de apps (NSStatusItem).',
+        badPrompt: 'Pon un iconito arriba a la derecha en la barra de menús.',
+        proPrompt: 'Implementa un Menu Bar Extra (NSStatusItem) con un icono template, un menú desplegable y actualización del estado mediante observer.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Context Menu',
+        definition: 'Un menú que aparece al hacer clic con el botón derecho (o Ctrl+clic) sobre un elemento y muestra acciones contextuales específicas de ese objeto.',
+        badPrompt: 'Pon las opciones al hacer clic derecho.',
+        proPrompt: 'Añade un Context Menu con las acciones relevantes al objeto seleccionado (Copiar, Renombrar, Eliminar), sin duplicar las que ya están en el menú de acciones.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Sidebar (Source List)',
+        definition: 'En macOS, el panel lateral que agrupa la navegación por secciones jerárquicas y desplegables (Source List), como en Finder o Mail, con items que pueden expandirse.',
+        badPrompt: 'Haz la barra lateral de la app como la del Finder.',
+        proPrompt: 'Construye una Sidebar estilo Source List con secciones plegables, iconos y badge de recuento por item, en un panel de ancho fijo con divider.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Column View (Browser)',
+        definition: 'El modo de navegación del Finder donde cada nivel de la jerarquía se muestra en una columna a la derecha de la anterior (NSBrowser).',
+        badPrompt: 'Haz el navegador de archivos con columnas.',
+        proPrompt: 'Implementa una Column View (NSBrowser) donde seleccionar un item de una columna abra la siguiente, ideal para jerarquías con muchos niveles.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Outline View',
+        definition: 'Una lista jerárquica expandible con items que contienen sub-items, mostrada con filas indentadas y disclosure triangles (NSOutlineView).',
+        badPrompt: 'Haz una lista de carpetas con flechitas para desplegar.',
+        proPrompt: 'Usa un Outline View (NSOutlineView) para la estructura jerárquica de datos, con filas indentadas y disclosure triangles para expandir/colapsar.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Disclosure Triangle',
+        definition: 'El pequeño triángulo que apunta a la derecha cuando está cerrado y hacia abajo cuando está abierto, usado para expandir y colapsar secciones o jerarquías.',
+        badPrompt: 'Pon una flechita para desplegar los subapartados.',
+        proPrompt: 'Añade un Disclosure Triangle a cada fila con hijos, animando la rotación del icono (90°) y mostrando u ocultando el contenido con transición suave.',
+        group: 'Menús y Navegación (macOS)'
+      },
+      {
+        term: 'Mac Window',
+        definition: 'El contenedor principal de una app en macOS, que incluye la title bar con los traffic lights, el toolbar y el área de contenido (content view).',
+        badPrompt: 'Haz la ventana de la app con su barrita de arriba.',
+        proPrompt: 'Diseña la Mac Window con title bar nativa (traffic lights), toolbar opcional y un content view que respete los insets del sistema.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Traffic Lights',
+        definition: 'Los tres botones de color de la esquina superior izquierda de cada ventana macOS: rojo (cerrar), amarillo (minimizar) y verde (maximizar/fullscreen).',
+        badPrompt: 'Pon los tres botoncitos de colores de Mac en la ventana.',
+        proPrompt: 'Respeta los Traffic Lights nativos: no los reemplaces en la web; en apps nativas mantenlos en su posición estándar con los atajos Cmd+W/Cmd+M/Cmd+F.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Toolbar (Unified Title Bar)',
+        definition: 'La barra integrada bajo la title bar de una ventana macOS que agrupa acciones principales, ajustes de vista y controles; en diseño unificado se fusiona con el título.',
+        badPrompt: 'Pon una barra de acciones debajo del título de la ventana.',
+        proPrompt: 'Configura el toolbar en modo unified (titlebarAppearsTransparent) con NSToolbar, incluyendo items principales y un overflow para los secundarios.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Visual Effect Material (Vibrancy)',
+        definition: 'Los materiales translúcidos y difuminados de macOS (NSVisualEffectView) que aplican un desenfoque adaptativo al contenido subyacente, como en sidebar y panels.',
+        badPrompt: 'Haz que el panel tenga el fondo borroso de Mac.',
+        proPrompt: 'Aplica un Visual Effect Material (NSVisualEffectView) de tipo sidebar para el panel lateral, con el contenido adaptándose automáticamente a light/dark mode.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Inspector',
+        definition: 'Un panel lateral (normalmente a la derecha) que muestra propiedades y controles para el elemento seleccionado, como en Xcode o Numbers.',
+        badPrompt: 'Pon un panel a la derecha con las propiedades.',
+        proPrompt: 'Implementa un Inspector con pestañas contextuales según la selección, agrupado por secciones (Estilo, Disposición, Datos) con disclosure headers.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Panel (Floating Window)',
+        definition: 'Una ventana flotante auxiliar (NSPanel) que complementa a la ventana principal, como la paleta de colores, y puede estar siempre por delante de ella.',
+        badPrompt: 'Haz una ventanita flotante para las herramientas.',
+        proPrompt: 'Crea un Panel flotante (NSPanel) con estilo utility que se mantenga sobre la ventana principal y desaparezca al hacer clic fuera cuando sea no modal.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Sheet',
+        definition: 'En macOS, una ventana secundaria que se desliza desde la parte superior de la ventana padre y bloquea la interacción con ella hasta que se cierra (modal atado a la ventana).',
+        badPrompt: 'Pon una ventanita que salga de arriba de la ventana.',
+        proPrompt: 'Usa un Sheet para acciones modales ligadas a la ventana (guardar cambios), presentándolo con el estilo nativo y el botón de cierre correcto.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Save Panel',
+        definition: 'El diálogo del sistema para guardar un archivo, que permite elegir ubicación, nombre y formato, pudiendo expandirse a un selector de archivos completo.',
+        badPrompt: 'Haz el cuadro de guardar archivo con carpeta y nombre.',
+        proPrompt: 'Utiliza el Save Panel nativo (NSSavePanel) con una extensión de archivo por defecto, permitiendo la vista expandida del selector de archivos.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Scroll View',
+        definition: 'El contenedor que permite desplazar contenido que supera el área visible (NSScrollView), con barras de scroll, zoom y control del comportamiento de scroll.',
+        badPrompt: 'Que el contenido largo se pueda hacer scroll.',
+        proPrompt: 'Envuelve el contenido en un Scroll View (NSScrollView) con overlay scroll bars y soporte para el scroll elástico (rubber-banding) nativo.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Split View',
+        definition: 'El layout que divide el contenido en dos o más paneles (NSSplitView) con divisores arrastrables para ajustar el tamaño de cada uno.',
+        badPrompt: 'Divide la ventana en dos partes que se puedan arrastrar.',
+        proPrompt: 'Implementa un Split View (NSSplitView) con sidebar izquierdo y contenido principal, permitiendo ajustar el ancho con el divisor y colapsar el sidebar.',
+        group: 'Ventanas y Sistema (macOS)'
+      },
+      {
+        term: 'Search Field',
+        definition: 'El campo de búsqueda nativo de macOS (NSSearchField) con icono de lupa, recents y un botón de limpiar; de estilo redondeado con borde.',
+        badPrompt: 'Pon un campo de búsqueda redondeado.',
+        proPrompt: 'Usa un Search Field nativo (NSSearchField) con placeholder, botón de limpiar visible al escribir y lista de búsquedas recientes.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Token Field',
+        definition: 'Un campo de texto que convierte las entradas confirmadas en "tokens" (chips editables con borde), usado para destinatarios de correo, etiquetas o tags (NSTokenField).',
+        badPrompt: 'Un campo donde se pongan etiquetas que se convierten en pastillas.',
+        proPrompt: 'Implementa un Token Field (NSTokenField) para añadir destinatarios, donde cada dirección validada se convierta en un token editable que pueda separarse de nuevo.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Combo Button',
+        definition: 'Un control que combina un menú desplegable con una acción principal: el cuerpo ejecuta la última acción y la flecha abre el menú con todas las opciones (NSComboButton).',
+        badPrompt: 'Pon un botón con flechita para elegir opción.',
+        proPrompt: 'Crea un Combo Button donde el clic en el cuerpo ejecute la acción por defecto y la flecha despliegue todas las variantes disponibles.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Pop-Up Button vs. Pull-Down Button vs. Combo Box',
+        definition: 'Pop-Up: muestra la opción seleccionada de un conjunto fijo y cambia al elegir. Pull-Down: ejecuta acciones o navega, manteniendo su título. Combo Box: combina un pop-up con un campo editable.',
+        badPrompt: 'Pon un menú desplegable para elegir el idioma.',
+        proPrompt: 'Usa un Pop-Up Button para seleccionar una opción persistente (idioma), un Pull-Down para acciones (Exportar >) y un Combo Box cuando la opción deba ser editable.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Segmented Control',
+        definition: 'Un control de segmentos conectados donde solo uno está activo a la vez, para alternar entre vistas, formatos o valores cercanos (NSSegmentedControl).',
+        badPrompt: 'Pon botoncitos unidos para cambiar de vista.',
+        proPrompt: 'Usa un Segmented Control (NSSegmentedControl) con los iconos o texto de cada vista y estado seleccionado con alto contraste.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Slider',
+        definition: 'Un control de arrastre para seleccionar un valor dentro de un rango continuo, con un thumb (tirador) y opcionalmente marcas de escala (NSSlider).',
+        badPrompt: 'Pon una barrita que se arrastre para el volumen.',
+        proPrompt: 'Implementa un Slider (NSSlider) con mínimo/máximo claros, thumb accesible por teclado (flechas) y etiqueta con el valor actual.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Stepper (macOS)',
+        definition: 'Un control de dos botones (flecha arriba/abajo o +/−) que incrementa o decrementa un valor numérico de a pasos (NSStepper).',
+        badPrompt: 'Pon las flechitas para cambiar el número.',
+        proPrompt: 'Empareja un Stepper (NSStepper) con un campo numérico sincronizado, definiendo min/max e incremento y deshabilitando los límites.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Color Well',
+        definition: 'Un control que muestra el color actual y abre el selector de color del sistema al hacer clic para cambiarlo (NSColorWell).',
+        badPrompt: 'Pon un cuadradito de color para cambiarlo.',
+        proPrompt: 'Usa un Color Well (NSColorWell) para editar colores de marca, abriendo el color panel nativo y actualizando el token de color en tiempo real.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Level Indicator',
+        definition: 'Un indicador de nivel que muestra un valor dentro de un rango con relleno continuo o discreto (como el de batería o señal), útil para valores de lectura no editables.',
+        badPrompt: 'Pon una barrita de nivel como la de la batería.',
+        proPrompt: 'Usa un Level Indicator (NSLevelIndicator) de tipo capacity para mostrar la cantidad consumida, con color crítico cuando el valor supere el umbral.',
+        group: 'Inputs y Controles (macOS)'
+      },
+      {
+        term: 'Alert (macOS)',
+        definition: 'El diálogo de alerta nativo de macOS (NSAlert) que presenta información o pide una decisión con botones (ej. "Guardar", "Cancelar"), modal respecto a la ventana o la app.',
+        badPrompt: 'Pon el aviso de Mac para confirmar el borrado.',
+        proPrompt: 'Usa un Alert nativo (NSAlert) para confirmaciones destructivas, con el botón destructivo a la izquierda y el botón por defecto resaltado.',
+        group: 'Feedback y Estado (macOS)'
+      },
+      {
+        term: 'Dock Badge',
+        definition: 'La insignia roja con número que se muestra sobre el icono de la app en el Dock para notificar la cantidad de avisos pendientes.',
+        badPrompt: 'Pon un número rojo en el icono del Dock.',
+        proPrompt: 'Actualiza el Dock Badge dinámicamente según los items no leídos y elimínalo (nil) cuando no haya pendientes.',
+        group: 'Feedback y Estado (macOS)'
+      },
+      {
+        term: 'Focus Ring',
+        definition: 'El anillo azul de foco de macOS que rodea al elemento controlado por teclado, cuyo color varía según el accent color del sistema.',
+        badPrompt: 'Marca el campo con un borde azul cuando esté activo.',
+        proPrompt: 'Deja que el Focus Ring nativo gestione el foco por teclado (full keyboard access) y no lo ocultes con estilos personalizados.',
+        group: 'Feedback y Estado (macOS)'
+      },
+      {
+        term: 'Helvetica',
+        definition: 'La tipografía histórica de Apple, utilizada en macOS durante años. Actualmente el sistema usa SF Pro como fuente del sistema, más legible y variable.',
+        badPrompt: 'Usa la fuente Helvetica de siempre.',
+        proPrompt: 'No fuerces Helvetica: usa la fuente del sistema (SF Pro en macOS, system-ui en web) para aprovechar los estilos variables y la legibilidad nativa.',
+        group: 'Tipografía (macOS)'
+      },
+      {
+        term: 'NSBrowser (Column View)',
+        definition: 'La clase AppKit que implementa la vista de columnas del Finder para navegar jerarquías de muchos niveles mostrando una columna por nivel.',
+        badPrompt: 'Usa la clase de navegador de columnas de AppKit.',
+        proPrompt: 'Configura NSBrowser para la navegación por columnas con delegados que sirvan el número de columnas y el contenido de cada una según la selección.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSOutlineView',
+        definition: 'La clase AppKit que renderiza listas jerárquicas expandibles con filas, disclosure triangles e indentación.',
+        badPrompt: 'Usa la clase de lista con subitems de AppKit.',
+        proPrompt: 'Implementa NSOutlineView con un data source jerárquico, expandiendo por defecto el primer nivel y con drag & drop para reordenar filas.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSStatusItem',
+        definition: 'La clase que añade iconos y menús a la barra de menús del sistema (Menu Bar Extra), visible aunque la app esté oculta.',
+        badPrompt: 'Usa la clase para el icono de la barra de menús.',
+        proPrompt: 'Crea un NSStatusItem con un icono template (SF Symbol), un menú con acciones y un tooltip descriptivo del estado de la app.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSDockTile Badge',
+        definition: 'La clase que controla la insignia (número) que se muestra sobre el icono de la app en el Dock.',
+        badPrompt: 'Usa la clase para el número del Dock.',
+        proPrompt: 'Actualiza NSDockTile badgeLabel con el contador de notificaciones y vacíalo ("") cuando la app esté activa.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSPanel',
+        definition: 'La subclase de NSWindow para ventanas auxiliares flotantes (paletas, inspectores) que pueden mantenerse sobre la ventana principal.',
+        badPrompt: 'Usa la clase de panel flotante de AppKit.',
+        proPrompt: 'Crea un NSPanel con nivel flotante (floating panel), estilo utility y cierre automático al hacer clic fuera si es no modal.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSPopover',
+        definition: 'La clase AppKit que presenta contenido contextual en una burbuja anclada a un elemento, ideal para acciones rápidas sin cambiar de ventana.',
+        badPrompt: 'Usa la clase de popover de AppKit.',
+        proPrompt: 'Presenta un NSPopover anclado al botón, con contentViewController y comportamiento transient (se cierra al hacer clic fuera).',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSVisualEffectView',
+        definition: 'La clase que aplica los materiales translúcidos (vibrancy) de macOS sobre el contenido subyacente.',
+        badPrompt: 'Usa la clase del fondo borroso de AppKit.',
+        proPrompt: 'Aplica NSVisualEffectView con blendingMode "withinWindow" y material según el estado de la ventana (active/inactive) para el sidebar o el toolbar.',
+        group: 'Componentes AppKit (clases NS)'
       }
     ]
   },
@@ -762,271 +1021,6 @@ export const dictionaryData: Record<string, DictionarySection> = {
         definition: 'Limpieza y reducción de código en gráficos vectoriales para mejorar el rendimiento y permitir la manipulación mediante CSS.',
         badPrompt: 'Pon este icono SVG en la web.',
         proPrompt: 'Optimiza el SVG eliminando etiquetas <defs> innecesarias, cambia los fill="black" por fill="currentColor" para heredar el color del texto, y conviértelo a un componente React.'
-      }
-    ]
-  },
-  'macos': {
-    title: 'macOS Native (Apple HIG)',
-    description: 'Componentes, controles y patrones nativos de macOS según las Apple Human Interface Guidelines. Si vas a pedir una app de escritorio a la IA, usa estos nombres exactos: cada control nativo tiene una clase AppKit detrás.',
-    terms: [
-      {
-        term: 'Menu Bar',
-        definition: 'La barra de menús del sistema en la parte superior de la pantalla (File, Edit, View, Window, Help), disponible en todo momento aunque cambies de app.',
-        badPrompt: 'Pon los menús de Mac arriba en la app.',
-        proPrompt: 'Usa la Menu Bar nativa del sistema (no una barra propia de la app) para comandos estándar como File/Edit/View, y reserva el toolbar para acciones contextuales.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Menu Bar Extra (Status Item)',
-        definition: 'Iconos y controles que viven en el lado derecho de la Menu Bar del sistema (junto al reloj), como Wi-Fi, batería o los utilitarios de apps (NSStatusItem).',
-        badPrompt: 'Pon un iconito arriba a la derecha en la barra de menús.',
-        proPrompt: 'Implementa un Menu Bar Extra (NSStatusItem) con un icono template, un menú desplegable y actualización del estado mediante observer.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Context Menu',
-        definition: 'Un menú que aparece al hacer clic con el botón derecho (o Ctrl+clic) sobre un elemento y muestra acciones contextuales específicas de ese objeto.',
-        badPrompt: 'Pon las opciones al hacer clic derecho.',
-        proPrompt: 'Añade un Context Menu con las acciones relevantes al objeto seleccionado (Copiar, Renombrar, Eliminar), sin duplicar las que ya están en el menú de acciones.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Sidebar (Source List)',
-        definition: 'En macOS, el panel lateral que agrupa la navegación por secciones jerárquicas y desplegables (Source List), como en Finder o Mail, con items que pueden expandirse.',
-        badPrompt: 'Haz la barra lateral de la app como la del Finder.',
-        proPrompt: 'Construye una Sidebar estilo Source List con secciones plegables, iconos y badge de recuento por item, en un panel de ancho fijo con divider.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Column View (Browser)',
-        definition: 'El modo de navegación del Finder donde cada nivel de la jerarquía se muestra en una columna a la derecha de la anterior (NSBrowser).',
-        badPrompt: 'Haz el navegador de archivos con columnas.',
-        proPrompt: 'Implementa una Column View (NSBrowser) donde seleccionar un item de una columna abra la siguiente, ideal para jerarquías con muchos niveles.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Outline View',
-        definition: 'Una lista jerárquica expandible con items que contienen sub-items, mostrada con filas indentadas y disclosure triangles (NSOutlineView).',
-        badPrompt: 'Haz una lista de carpetas con flechitas para desplegar.',
-        proPrompt: 'Usa un Outline View (NSOutlineView) para la estructura jerárquica de datos, con filas indentadas y disclosure triangles para expandir/colapsar.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Disclosure Triangle',
-        definition: 'El pequeño triángulo que apunta a la derecha cuando está cerrado y hacia abajo cuando está abierto, usado para expandir y colapsar secciones o jerarquías.',
-        badPrompt: 'Pon una flechita para desplegar los subapartados.',
-        proPrompt: 'Añade un Disclosure Triangle a cada fila con hijos, animando la rotación del icono (90°) y mostrando u ocultando el contenido con transición suave.',
-        group: 'Menús y Navegación'
-      },
-      {
-        term: 'Mac Window',
-        definition: 'El contenedor principal de una app en macOS, que incluye la title bar con los traffic lights, el toolbar y el área de contenido (content view).',
-        badPrompt: 'Haz la ventana de la app con su barrita de arriba.',
-        proPrompt: 'Diseña la Mac Window con title bar nativa (traffic lights), toolbar opcional y un content view que respete los insets del sistema.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Traffic Lights',
-        definition: 'Los tres botones de color de la esquina superior izquierda de cada ventana macOS: rojo (cerrar), amarillo (minimizar) y verde (maximizar/fullscreen).',
-        badPrompt: 'Pon los tres botoncitos de colores de Mac en la ventana.',
-        proPrompt: 'Respeta los Traffic Lights nativos: no los reemplaces en la web; en apps nativas mantenlos en su posición estándar con los atajos Cmd+W/Cmd+M/Cmd+F.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Toolbar (Unified Title Bar)',
-        definition: 'La barra integrada bajo la title bar de una ventana macOS que agrupa acciones principales, ajustes de vista y controles; en diseño unificado se fusiona con el título.',
-        badPrompt: 'Pon una barra de acciones debajo del título de la ventana.',
-        proPrompt: 'Configura el toolbar en modo unified (titlebarAppearsTransparent) con NSToolbar, incluyendo items principales y un overflow para los secundarios.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Visual Effect Material (Vibrancy)',
-        definition: 'Los materiales translúcidos y difuminados de macOS (NSVisualEffectView) que aplican un desenfoque adaptativo al contenido subyacente, como en sidebar y panels.',
-        badPrompt: 'Haz que el panel tenga el fondo borroso de Mac.',
-        proPrompt: 'Aplica un Visual Effect Material (NSVisualEffectView) de tipo sidebar para el panel lateral, con el contenido adaptándose automáticamente a light/dark mode.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Inspector',
-        definition: 'Un panel lateral (normalmente a la derecha) que muestra propiedades y controles para el elemento seleccionado, como en Xcode o Numbers.',
-        badPrompt: 'Pon un panel a la derecha con las propiedades.',
-        proPrompt: 'Implementa un Inspector con pestañas contextuales según la selección, agrupado por secciones (Estilo, Disposición, Datos) con disclosure headers.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Panel (Floating Window)',
-        definition: 'Una ventana flotante auxiliar (NSPanel) que complementa a la ventana principal, como la paleta de colores, y puede estar siempre por delante de ella.',
-        badPrompt: 'Haz una ventanita flotante para las herramientas.',
-        proPrompt: 'Crea un Panel flotante (NSPanel) con estilo utility que se mantenga sobre la ventana principal y desaparezca al hacer clic fuera cuando sea no modal.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Sheet',
-        definition: 'En macOS, una ventana secundaria que se desliza desde la parte superior de la ventana padre y bloquea la interacción con ella hasta que se cierra (modal atado a la ventana).',
-        badPrompt: 'Pon una ventanita que salga de arriba de la ventana.',
-        proPrompt: 'Usa un Sheet para acciones modales ligadas a la ventana (guardar cambios), presentándolo con el estilo nativo y el botón de cierre correcto.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Save Panel',
-        definition: 'El diálogo del sistema para guardar un archivo, que permite elegir ubicación, nombre y formato, pudiendo expandirse a un selector de archivos completo.',
-        badPrompt: 'Haz el cuadro de guardar archivo con carpeta y nombre.',
-        proPrompt: 'Utiliza el Save Panel nativo (NSSavePanel) con una extensión de archivo por defecto, permitiendo la vista expandida del selector de archivos.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Scroll View',
-        definition: 'El contenedor que permite desplazar contenido que supera el área visible (NSScrollView), con barras de scroll, zoom y control del comportamiento de scroll.',
-        badPrompt: 'Que el contenido largo se pueda hacer scroll.',
-        proPrompt: 'Envuelve el contenido en un Scroll View (NSScrollView) con overlay scroll bars y soporte para el scroll elástico (rubber-banding) nativo.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Split View',
-        definition: 'El layout que divide el contenido en dos o más paneles (NSSplitView) con divisores arrastrables para ajustar el tamaño de cada uno.',
-        badPrompt: 'Divide la ventana en dos partes que se puedan arrastrar.',
-        proPrompt: 'Implementa un Split View (NSSplitView) con sidebar izquierdo y contenido principal, permitiendo ajustar el ancho con el divisor y colapsar el sidebar.',
-        group: 'Ventanas y Sistema'
-      },
-      {
-        term: 'Search Field',
-        definition: 'El campo de búsqueda nativo de macOS (NSSearchField) con icono de lupa, recents y un botón de limpiar; de estilo redondeado con borde.',
-        badPrompt: 'Pon un campo de búsqueda redondeado.',
-        proPrompt: 'Usa un Search Field nativo (NSSearchField) con placeholder, botón de limpiar visible al escribir y lista de búsquedas recientes.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Token Field',
-        definition: 'Un campo de texto que convierte las entradas confirmadas en "tokens" (chips editables con borde), usado para destinatarios de correo, etiquetas o tags (NSTokenField).',
-        badPrompt: 'Un campo donde se pongan etiquetas que se convierten en pastillas.',
-        proPrompt: 'Implementa un Token Field (NSTokenField) para añadir destinatarios, donde cada dirección validada se convierta en un token editable que pueda separarse de nuevo.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Combo Button',
-        definition: 'Un control que combina un menú desplegable con una acción principal: el cuerpo ejecuta la última acción y la flecha abre el menú con todas las opciones (NSComboButton).',
-        badPrompt: 'Pon un botón con flechita para elegir opción.',
-        proPrompt: 'Crea un Combo Button donde el clic en el cuerpo ejecute la acción por defecto y la flecha despliegue todas las variantes disponibles.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Pop-Up Button vs. Pull-Down Button vs. Combo Box',
-        definition: 'Pop-Up: muestra la opción seleccionada de un conjunto fijo y cambia al elegir. Pull-Down: ejecuta acciones o navega, manteniendo su título. Combo Box: combina un pop-up con un campo editable.',
-        badPrompt: 'Pon un menú desplegable para elegir el idioma.',
-        proPrompt: 'Usa un Pop-Up Button para seleccionar una opción persistente (idioma), un Pull-Down para acciones (Exportar >) y un Combo Box cuando la opción deba ser editable.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Segmented Control',
-        definition: 'Un control de segmentos conectados donde solo uno está activo a la vez, para alternar entre vistas, formatos o valores cercanos (NSSegmentedControl).',
-        badPrompt: 'Pon botoncitos unidos para cambiar de vista.',
-        proPrompt: 'Usa un Segmented Control (NSSegmentedControl) con los iconos o texto de cada vista y estado seleccionado con alto contraste.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Slider',
-        definition: 'Un control de arrastre para seleccionar un valor dentro de un rango continuo, con un thumb (tirador) y opcionalmente marcas de escala (NSSlider).',
-        badPrompt: 'Pon una barrita que se arrastre para el volumen.',
-        proPrompt: 'Implementa un Slider (NSSlider) con mínimo/máximo claros, thumb accesible por teclado (flechas) y etiqueta con el valor actual.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Stepper',
-        definition: 'Un control de dos botones (flecha arriba/abajo o +/−) que incrementa o decrementa un valor numérico de a pasos (NSStepper).',
-        badPrompt: 'Pon las flechitas para cambiar el número.',
-        proPrompt: 'Empareja un Stepper (NSStepper) con un campo numérico sincronizado, definiendo min/max e incremento y deshabilitando los límites.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Color Well',
-        definition: 'Un control que muestra el color actual y abre el selector de color del sistema al hacer clic para cambiarlo (NSColorWell).',
-        badPrompt: 'Pon un cuadradito de color para cambiarlo.',
-        proPrompt: 'Usa un Color Well (NSColorWell) para editar colores de marca, abriendo el color panel nativo y actualizando el token de color en tiempo real.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Level Indicator',
-        definition: 'Un indicador de nivel que muestra un valor dentro de un rango con relleno continuo o discreto (como el de batería o señal), útil para valores de lectura no editables.',
-        badPrompt: 'Pon una barrita de nivel como la de la batería.',
-        proPrompt: 'Usa un Level Indicator (NSLevelIndicator) de tipo capacity para mostrar la cantidad consumida, con color crítico cuando el valor supere el umbral.',
-        group: 'Inputs y Controles'
-      },
-      {
-        term: 'Alert',
-        definition: 'El diálogo de alerta nativo de macOS (NSAlert) que presenta información o pide una decisión con botones (ej. "Guardar", "Cancelar"), modal respecto a la ventana o la app.',
-        badPrompt: 'Pon el aviso de Mac para confirmar el borrado.',
-        proPrompt: 'Usa un Alert nativo (NSAlert) para confirmaciones destructivas, con el botón destructivo a la izquierda y el botón por defecto resaltado.',
-        group: 'Feedback y Estado'
-      },
-      {
-        term: 'Dock Badge',
-        definition: 'La insignia roja con número que se muestra sobre el icono de la app en el Dock para notificar la cantidad de avisos pendientes.',
-        badPrompt: 'Pon un número rojo en el icono del Dock.',
-        proPrompt: 'Actualiza el Dock Badge dinámicamente según los items no leídos y elimínalo (nil) cuando no haya pendientes.',
-        group: 'Feedback y Estado'
-      },
-      {
-        term: 'Focus Ring',
-        definition: 'El anillo azul de foco de macOS que rodea al elemento controlado por teclado, cuyo color varía según el accent color del sistema.',
-        badPrompt: 'Marca el campo con un borde azul cuando esté activo.',
-        proPrompt: 'Deja que el Focus Ring nativo gestione el foco por teclado (full keyboard access) y no lo ocultes con estilos personalizados.',
-        group: 'Feedback y Estado'
-      },
-      {
-        term: 'Helvetica',
-        definition: 'La tipografía histórica de Apple, utilizada en macOS durante años. Actualmente el sistema usa SF Pro como fuente del sistema, más legible y variable.',
-        badPrompt: 'Usa la fuente Helvetica de siempre.',
-        proPrompt: 'No fuerces Helvetica: usa la fuente del sistema (SF Pro en macOS, system-ui en web) para aprovechar los estilos variables y la legibilidad nativa.',
-        group: 'Tipografía'
-      },
-      {
-        term: 'NSBrowser (Column View)',
-        definition: 'La clase AppKit que implementa la vista de columnas del Finder para navegar jerarquías de muchos niveles mostrando una columna por nivel.',
-        badPrompt: 'Usa la clase de navegador de columnas de AppKit.',
-        proPrompt: 'Configura NSBrowser para la navegación por columnas con delegados que sirvan el número de columnas y el contenido de cada una según la selección.',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSOutlineView',
-        definition: 'La clase AppKit que renderiza listas jerárquicas expandibles con filas, disclosure triangles e indentación.',
-        badPrompt: 'Usa la clase de lista con subitems de AppKit.',
-        proPrompt: 'Implementa NSOutlineView con un data source jerárquico, expandiendo por defecto el primer nivel y con drag & drop para reordenar filas.',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSStatusItem',
-        definition: 'La clase que añade iconos y menús a la barra de menús del sistema (Menu Bar Extra), visible aunque la app esté oculta.',
-        badPrompt: 'Usa la clase para el icono de la barra de menús.',
-        proPrompt: 'Crea un NSStatusItem con un icono template (SF Symbol), un menú con acciones y un tooltip descriptivo del estado de la app.',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSDockTile Badge',
-        definition: 'La clase que controla la insignia (número) que se muestra sobre el icono de la app en el Dock.',
-        badPrompt: 'Usa la clase para el número del Dock.',
-        proPrompt: 'Actualiza NSDockTile badgeLabel con el contador de notificaciones y vacíalo ("") cuando la app esté activa.',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSPanel',
-        definition: 'La subclase de NSWindow para ventanas auxiliares flotantes (paletas, inspectores) que pueden mantenerse sobre la ventana principal.',
-        badPrompt: 'Usa la clase de panel flotante de AppKit.',
-        proPrompt: 'Crea un NSPanel con nivel flotante (floating panel), estilo utility y cierre automático al hacer clic fuera si es no modal.',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSPopover',
-        definition: 'La clase AppKit que presenta contenido contextual en una burbuja anclada a un elemento, ideal para acciones rápidas sin cambiar de ventana.',
-        badPrompt: 'Usa la clase de popover de AppKit.',
-        proPrompt: 'Presenta un NSPopover anclado al botón, con contentViewController y comportamiento transient (se cierra al hacer clic fuera).',
-        group: 'Componentes AppKit (clases NS)'
-      },
-      {
-        term: 'NSVisualEffectView',
-        definition: 'La clase que aplica los materiales translúcidos (vibrancy) de macOS sobre el contenido subyacente.',
-        badPrompt: 'Usa la clase del fondo borroso de AppKit.',
-        proPrompt: 'Aplica NSVisualEffectView con blendingMode "withinWindow" y material según el estado de la ventana (active/inactive) para el sidebar o el toolbar.',
-        group: 'Componentes AppKit (clases NS)'
       }
     ]
   }

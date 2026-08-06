@@ -12,7 +12,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
     { id: 'ai-assisted', title: 'IA en UX', desc: 'Herramientas y procesos', color: 'hover:bg-v-green' },
     { id: 'frontend', title: 'Frontend', desc: 'Términos de código', color: 'hover:bg-v-blue' },
     { id: 'integration', title: 'Integración', desc: 'De diseño a código', color: 'hover:bg-v-red' },
-    { id: 'macos', title: 'macOS', desc: 'Componentes nativos de Apple', color: 'hover:bg-v-blue' },
   ];
 
   return (
