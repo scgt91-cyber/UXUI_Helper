@@ -46,10 +46,10 @@ export const dictionaryData: Record<string, DictionarySection> = {
         group: 'Estructura y Layout (Las famosas "Cajas")'
       },
       {
-        term: 'Divider / Separator',
-        definition: 'Una línea fina o espacio visual utilizado para separar contenido o agrupar elementos relacionados dentro de un layout.',
+        term: 'Divider vs. Separator vs. Rule',
+        definition: 'Tres implementaciones del mismo concepto: Divider es el componente que separa bloques de contenido; Separator es la primitiva accesible de librerías como Radix UI; Rule es el elemento HTML semántico <hr> para separación temática.',
         badPrompt: 'Pon una raya gris para separar las dos secciones.',
-        proPrompt: 'Añade un Divider horizontal usando un borde inferior (border-b) con un color sutil (border-gray-200) y margen vertical (my-4).',
+        proPrompt: 'Separa secciones con un Divider (border-b + border-gray-200 + my-4). Para separación temática usa el elemento <hr /> (Rule) y para agrupación visual accesible usa el componente Separator de Radix.',
         group: 'Estructura y Layout (Las famosas "Cajas")'
       },
       {
@@ -118,6 +118,286 @@ export const dictionaryData: Record<string, DictionarySection> = {
         term: 'Dropdown Menu',
         definition: 'Una lista contextual de opciones o acciones que aparece al interactuar con un botón u otro control.',
         group: 'Componentes Interactivos y Feedback'
+      },
+      {
+        term: 'Pagination',
+        definition: 'La navegación por páginas que divide un conjunto grande de resultados o contenido en páginas numeradas más pequeñas, con controles anterior/siguiente.',
+        badPrompt: 'Pon botones para pasar las páginas de la lista.',
+        proPrompt: 'Implementa un componente Pagination mostrando las páginas alrededor de la actual (window), con botones prev/next y estados disabled en los extremos.',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'Scrollspy',
+        definition: 'Un mecanismo que detecta qué sección del contenido es visible en el viewport y resalta automáticamente el item de navegación correspondiente.',
+        badPrompt: 'Que el menú se marque solo según dónde haga scroll.',
+        proPrompt: 'Implementa un Scrollspy usando IntersectionObserver para resaltar el enlace activo del submenú cuando su sección entre en el centro del viewport.',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'Hamburger Menu (Nav Drawer)',
+        definition: 'Un botón de tres líneas horizontales que abre un panel de navegación deslizante, típicamente en móviles o cuando el espacio es reducido.',
+        badPrompt: 'Pon el menú clásico de tres rayitas para el móvil.',
+        proPrompt: 'Convierte la navegación en un Hamburger Menu en los breakpoints móviles: el botón abre un Nav Drawer desde la izquierda con scrim y cierre al hacer clic fuera (z-index alto).',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'Site Header vs. Navigation Bar',
+        definition: 'El Site Header es la zona superior que agrupa branding, buscador y acciones de sesión; la Navigation Bar es la barra de enlaces de navegación, que puede vivir dentro o debajo del header.',
+        badPrompt: 'Haz la barra de arriba con el logo y los links.',
+        proPrompt: 'Distingue el Site Header (branding, CTA y estado de sesión) de la Navigation Bar (enlaces principales) con una jerarquía clara en dos niveles.',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'Command Palette',
+        definition: 'Un buscador global que se abre con un atajo de teclado (Cmd/Ctrl+K) y permite ejecutar comandos o navegar a cualquier parte de la app escribiendo texto.',
+        badPrompt: 'Pon un buscador bonito con Ctrl+K para navegar por la app.',
+        proPrompt: 'Implementa una Command Palette con Cmd+K, autofoco en el input, navegación con flechas + Enter y resultados agrupados por categorías (Acciones, Navegación).',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'The Three Dots (Overflow Menu)',
+        definition: 'Un icono de tres puntos (vertical u horizontal) que oculta acciones secundarias o menos frecuentes en un menú desplegable, reduciendo la carga visual.',
+        badPrompt: 'Pon tres puntitos donde estén las demás opciones.',
+        proPrompt: 'Agrupa las acciones secundarias en un Overflow Menu (tres puntos) y mantén solo las 2-3 acciones principales visibles en la superficie.',
+        group: 'Navegación (Web)'
+      },
+      {
+        term: 'Form Field',
+        definition: 'La unidad básica de un formulario: un campo con su label asociado, input, hint de ayuda y estados de validación (error, éxito, disabled).',
+        badPrompt: 'Haz los campos del formulario con sus letreritos.',
+        proPrompt: 'Construye cada Form Field como un componente con label asociado (htmlFor), mensaje de ayuda, estado de error y mensaje de validación accesible (aria-describedby).',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Search Field (Web)',
+        definition: 'Un campo de texto dedicado a buscar, con icono de lupa, placeholder claro y a menudo tecla Escape para limpiar y un botón de borrado.',
+        badPrompt: 'Pon un cajón de búsqueda arriba.',
+        proPrompt: 'Añade un Search Field con icono de lupa, botón de limpiar (×) que aparece al escribir y soporte para la tecla "/" que lo enfoca.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Sign-in Form',
+        definition: 'Un formulario de inicio de sesión que normalmente incluye email/username, contraseña (con mostrar/ocultar), "recordarme", recuperación de contraseña y un CTA principal.',
+        badPrompt: 'Haz la página de login con usuario y contraseña.',
+        proPrompt: 'Diseña un Sign-in Form con validación en vivo, toggle mostrar/ocultar contraseña, autocomplete correcto (name/autocomplete) y un único CTA primario centrado.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Date Picker',
+        definition: 'Un control que permite seleccionar una fecha (y a veces hora) mediante un calendario visual, con la entrada manual por teclado como alternativa.',
+        badPrompt: 'Pon un calendario para elegir el día.',
+        proPrompt: 'Implementa un Date Picker con calendario mensual, navegación por teclado (flechas, Enter) y entrada manual con formato dd/mm/aaaa validado.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Combobox (Autocomplete / Typeahead)',
+        definition: 'Un campo de texto que combina input libre con una lista de sugerencias que se filtra mientras se escribe (autocomplete).',
+        badPrompt: 'Pon un buscador que vaya sugiriendo mientras escribes.',
+        proPrompt: 'Crea un Combobox accesible: input con aria-expanded, lista de opciones filtrada en tiempo real y soporte de flechas + Enter para seleccionar.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Multi-select',
+        definition: 'Un control de selección que permite elegir varias opciones de una lista, mostrando los valores seleccionados como chips eliminables o una lista apilada.',
+        badPrompt: 'Que se puedan elegir varias cosas de la lista.',
+        proPrompt: 'Implementa un Multi-select donde cada selección aparezca como un chip eliminable, con menú desplegable de opciones y búsqueda dentro.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Switch vs. Checkbox vs. Radio',
+        definition: 'Switch: activa o desactiva algo con efecto inmediato (binario). Checkbox: marca una opción independiente sin efecto inmediato. Radio: elige una opción dentro de un grupo mutuamente excluyente.',
+        badPrompt: 'Pon interruptores para las opciones de la encuesta.',
+        proPrompt: 'Usa Switch para activar ajustes en vivo, Checkboxes para selecciones independientes y Radios (no checkboxes) para opciones excluyentes como el método de pago.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Toggle Group (Segmented Control)',
+        definition: 'Un grupo de botones unidos en una sola barra que permiten alternar entre vistas o filtros, mostrando una sola opción activa a la vez.',
+        badPrompt: 'Pon botoncitos juntos para cambiar entre vista lista y cuadrícula.',
+        proPrompt: 'Crea un Toggle Group con dos opciones (Vista Lista / Vista Grid) donde la activa tenga fondo destacado y contraste suficiente (WCAG AA).',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Resize Handle',
+        definition: 'El punto o borde arrastrable en la esquina o el borde de un elemento que permite redimensionarlo, típicamente paneles o áreas de texto.',
+        badPrompt: 'Que se pueda agrandar la caja arrastrándola.',
+        proPrompt: 'Añade un Resize Handle (cursor col-resize) entre el sidebar y el contenido para ajustar el ancho del panel, respetando min/max-width.',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Insertion Caret',
+        definition: 'La línea vertical parpadeante que indica dónde se insertará el texto que se escribe dentro de un campo o editor.',
+        badPrompt: 'Haz que se vea dónde estoy escribiendo.',
+        proPrompt: 'Asegura que el Insertion Caret sea visible con alto contraste dentro del campo, especialmente en estado de foco (:focus).',
+        group: 'Formularios e Inputs (Web)'
+      },
+      {
+        term: 'Bento Grid',
+        definition: 'Un layout de cuadrícula asimétrico inspirado en las Bento Boxes japonesas donde las celdas tienen tamaños variados, creando composiciones visuales ricas.',
+        badPrompt: 'Haz una cuadrícula bonita con cajas de distintos tamaños.',
+        proPrompt: 'Compón un Bento Grid con CSS Grid (grid-cols-4) donde la celda principal ocupe 2x2 y el resto tengan tamaños irregulares y equilibrados.',
+        group: 'Contenedores y Layout (Web)'
+      },
+      {
+        term: 'Masonry Layout',
+        definition: 'Un layout de columnas de igual ancho pero altura variable, donde los elementos se apilan sin huecos verticales, como en Pinterest.',
+        badPrompt: 'Haz una galería de imágenes estilo Pinterest.',
+        proPrompt: 'Implementa un Masonry Layout con CSS columns (column-count: 3) para que las tarjetas de alturas distintas fluyan sin espacios en blanco.',
+        group: 'Contenedores y Layout (Web)'
+      },
+      {
+        term: 'Split View (Web)',
+        definition: 'Un layout donde el viewport se divide en dos o más paneles independientes (ej. lista + detalle) separados por un divisor.',
+        badPrompt: 'Haz la página con lista a la izquierda y detalle a la derecha.',
+        proPrompt: 'Implementa un Split View con dos paneles (master-detail) en grid-cols-[320px_1fr], con divisor entre ambos y versión móvil en pila vertical.',
+        group: 'Contenedores y Layout (Web)'
+      },
+      {
+        term: 'Modal Dialog vs. Drawer vs. Sheet',
+        definition: 'Modal Dialog: ventana centrada que bloquea la página. Drawer: panel lateral deslizante. Sheet: panel que emerge desde el borde inferior (móvil) o lateral. Los tres usan un scrim.',
+        badPrompt: 'Pon una ventana encima para los filtros.',
+        proPrompt: 'Usa un Drawer lateral para filtros avanzados, un Sheet inferior para selecciones rápidas en móvil y un Modal Dialog centrado solo para acciones críticas que requieran confirmación.',
+        group: 'Overlays y Superficies (Web)'
+      },
+      {
+        term: 'Lightbox',
+        definition: 'Un overlay que muestra una imagen (o galería) ampliada sobre la página, con el fondo oscurecido para enfocar la atención.',
+        badPrompt: 'Que la foto se agrande al hacer clic con el fondo oscuro.',
+        proPrompt: 'Implementa un Lightbox con teclas (Esc para cerrar, flechas para navegar), botón de zoom y un scrim oscurecido con blur.',
+        group: 'Overlays y Superficies (Web)'
+      },
+      {
+        term: 'Hover Card',
+        definition: 'Una tarjeta informativa contextual que aparece al hacer hover sobre un enlace o elemento, con una breve ventana de activación para evitar parpadeos.',
+        badPrompt: 'Que al pasar el ratón salga una cajita con información.',
+        proPrompt: 'Crea un Hover Card con delay de apertura/cierre (openDelay 300ms) para evitar flicker y posicionamiento respecto al elemento ancla.',
+        group: 'Overlays y Superficies (Web)'
+      },
+      {
+        term: 'Scrim (Backdrop)',
+        definition: 'La capa semitransparente oscura (o desenfocada) que cubre el resto de la interfaz para destacar el contenido superpuesto y bloquear la interacción.',
+        badPrompt: 'Oscurece el fondo cuando salga el menú lateral.',
+        proPrompt: 'Añade un Scrim (fixed inset-0 bg-black/40) tras el drawer con un clic para cerrar y un efecto de fundido en la entrada y salida.',
+        group: 'Overlays y Superficies (Web)'
+      },
+      {
+        term: 'Alert',
+        definition: 'Un mensaje destacado que comunica información importante sobre el estado del sistema (éxito, error, advertencia) y puede incluir una acción.',
+        badPrompt: 'Pon un aviso de color cuando algo falle.',
+        proPrompt: 'Usa un Alert de tipo destructive con icono, título y mensaje claro, más un enlace o botón de acción cuando el error tenga solución.',
+        group: 'Feedback y Estados (Web)'
+      },
+      {
+        term: 'Inline Alert vs. Callout vs. Banner',
+        definition: 'Inline Alert: mensaje junto al contenido afectado (validación de campos). Callout: bloque destacado sobre información contextual. Banner: franja persistente a nivel de página o app.',
+        badPrompt: 'Pon avisos para cuando falten datos.',
+        proPrompt: 'Muestra un Inline Alert bajo el campo con error, un Callout para notas de contexto y un Banner superior solo para avisos globales (ej. mantenimiento).',
+        group: 'Feedback y Estados (Web)'
+      },
+      {
+        term: 'Empty State',
+        definition: 'La pantalla o zona que se muestra cuando no hay datos o contenido aún, con un mensaje claro y una acción para resolver la situación.',
+        badPrompt: '¿Qué pongo cuando no hay resultados?',
+        proPrompt: 'Diseña un Empty State con icono, mensaje breve, sugerencia útil y un CTA de acción principal (ej. "Añadir primer proyecto").',
+        group: 'Feedback y Estados (Web)'
+      },
+      {
+        term: 'Skeleton vs. Spinner',
+        definition: 'Skeleton: placeholder con la silueta exacta del contenido que aparece durante la carga. Spinner: icono giratorio genérico. El skeleton comunica mejor la estructura final y reduce la percepción de espera.',
+        badPrompt: 'Pon un relojito de carga mientras carga la página.',
+        proPrompt: 'Usa un Skeleton con la silueta exacta de las tarjetas mientras cargan los datos, y reserva el Spinner para acciones concretas (enviar, descargar).',
+        group: 'Feedback y Estados (Web)'
+      },
+      {
+        term: 'Progress Ring vs. Spinner vs. Progress Bar',
+        definition: 'Progress Ring: círculo con un arco que muestra un porcentaje real de avance. Spinner: indica actividad sin porcentaje. Progress Bar: barra lineal que muestra el progreso de una tarea.',
+        badPrompt: 'Pon una barrita que se vaya llenando al subir el archivo.',
+        proPrompt: 'Usa un Progress Bar (o Ring) con el valor real del porcentaje para la subida de archivos, y un Spinner para estados indeterminados donde no se conoce la duración.',
+        group: 'Feedback y Estados (Web)'
+      },
+      {
+        term: 'Carousel',
+        definition: 'Un carrusel de contenido (imágenes, tarjetas, testimonios) que se desplaza horizontalmente con flechas, indicadores de posición y a menudo autoplay.',
+        badPrompt: 'Pon un carrusel de fotos que pase solo.',
+        proPrompt: 'Implementa un Carousel con scroll-snap, flechas e indicadores de posición; evita el autoplay o inclúyelo con pausa en hover y controles visibles.',
+        group: 'Selección y Controles (Web)'
+      },
+      {
+        term: 'Drag & Drop',
+        definition: 'Interacción que permite arrastrar un elemento (drag) y soltarlo (drop) en otra zona para moverlo, reordenarlo o cargarlo.',
+        badPrompt: 'Que las tarjetas se puedan arrastrar para ordenarlas.',
+        proPrompt: 'Implementa Drag & Drop con estados visuales claros: el item arrastrado con sombra, la zona de drop destacada y feedback al soltar (éxito/error).',
+        group: 'Selección y Controles (Web)'
+      },
+      {
+        term: 'Steps',
+        definition: 'Un componente de proceso que muestra las etapas de un flujo lineal (paso 1, 2, 3...) con estados completado, activo y pendiente.',
+        badPrompt: 'Haz el proceso de registro por pasos.',
+        proPrompt: 'Usa Steps con indicadores de estado (completado/actual/pendiente), navegación prev/next validada y persistencia del progreso entre pasos.',
+        group: 'Selección y Controles (Web)'
+      },
+      {
+        term: 'Avatar Group',
+        definition: 'Un conjunto de avatares apilados y solapados que representa a varios usuarios, a menudo con un contador "+3" para los restantes.',
+        badPrompt: 'Pon las fotos de los usuarios juntas.',
+        proPrompt: 'Crea un Avatar Group con avatares solapados (negative margin), borde del color de fondo y un último avatar con el contador de usuarios restantes.',
+        group: 'Selección y Controles (Web)'
+      },
+      {
+        term: 'Parallax Scrolling',
+        definition: 'Efecto donde las capas de fondo se mueven a una velocidad distinta que el contenido en primer plano al hacer scroll, creando profundidad.',
+        badPrompt: 'Haz que la imagen de fondo se mueva más lento que el resto.',
+        proPrompt: 'Implementa Parallax con transform: translateY basado en el scroll (translate3d para rendimiento), solo en desktop y respetando prefers-reduced-motion.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Spring Animation',
+        definition: 'Animación física que imita un muelle (spring) con rebote y elasticidad natural, definida por masa, rigidez y fricción en vez de una duración fija.',
+        badPrompt: 'Ponle un rebote chulo al abrir el menú.',
+        proPrompt: 'Usa una spring animation (ej. framer-motion: type: "spring", stiffness 300, damping 30) para la entrada de elementos, evitando rebotes excesivos en interfaces de trabajo.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Easing (Timing Function)',
+        definition: 'La curva que define cómo acelera o desacelera una animación a lo largo de su duración (linear, ease-in, ease-out, ease-in-out, cubic-bezier).',
+        badPrompt: 'Que la animación se vea fluida.',
+        proPrompt: 'Aplica easing ease-out para entradas (aceleración rápida, frenada suave) y ease-in-out para movimientos de ida y vuelta; documenta la curva cubic-bezier.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Text Scramble',
+        definition: 'Un efecto de texto donde los caracteres parecen "descifrarse" aleatoriamente hasta revelar la palabra final, usado para efectos de estilo hacker o futurista.',
+        badPrompt: 'Haz un efecto de texto tipo Matrix.',
+        proPrompt: 'Crea un Text Scramble con caracteres aleatorios que se resuelven progresivamente hasta la palabra destino, con ~50ms por frame y pausa en hover.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Marquee',
+        definition: 'Una banda de contenido (texto, logos) que se desplaza horizontalmente de forma continua e infinita, muy usada en secciones de logos o anuncios.',
+        badPrompt: 'Pon una cinta de logos que se mueva sola.',
+        proPrompt: 'Implementa un Marquee con animación CSS (translateX de 0 a -50%) sobre contenido duplicado, con pausa al hacer hover y respeto a prefers-reduced-motion.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Sticky vs. Fixed Positioning',
+        definition: 'Sticky: el elemento permanece en el flujo del documento y se "pega" a la pantalla cuando su contenedor lo cruza. Fixed: el elemento queda fijo respecto al viewport, independiente del scroll.',
+        badPrompt: 'Que el header se quede arriba al hacer scroll.',
+        proPrompt: 'Usa position: sticky (top-0) para el header que debe seguir dentro de su sección, y position: fixed solo para elementos globales como un botón flotante o un overlay.',
+        group: 'Movimiento y Animaciones (Web)'
+      },
+      {
+        term: 'Truncation (Ellipsis & Line Clamp)',
+        definition: 'El recorte de texto largo con puntos suspensivos (…) cuando supera el ancho o el número de líneas permitidas, mediante overflow-hidden, text-overflow y line-clamp.',
+        badPrompt: 'Que el título largo no rompa el diseño.',
+        proPrompt: 'Trunca el título con truncate (una línea) y el párrafo con line-clamp-2, añadiendo el atributo title o un tooltip con el texto completo.',
+        group: 'Tipografía y Texto (Web)'
+      },
+      {
+        term: 'Focus Ring (:focus-visible)',
+        definition: 'El anillo visible que rodea a un elemento enfocado con teclado (pero no necesariamente con ratón) para indicar la posición del foco, aplicado con la pseudo-clase :focus-visible.',
+        badPrompt: 'Ponle un borde cuando se seleccione el botón.',
+        proPrompt: 'Aplica un Focus Ring con :focus-visible (ring-2 ring-v-blue ring-offset-2) a los elementos interactivos, garantizando navegación por teclado visible y cumpliendo WCAG 2.4.7.',
+        group: 'Cursor e Interacción (Web)'
       }
     ]
   },
@@ -482,6 +762,271 @@ export const dictionaryData: Record<string, DictionarySection> = {
         definition: 'Limpieza y reducción de código en gráficos vectoriales para mejorar el rendimiento y permitir la manipulación mediante CSS.',
         badPrompt: 'Pon este icono SVG en la web.',
         proPrompt: 'Optimiza el SVG eliminando etiquetas <defs> innecesarias, cambia los fill="black" por fill="currentColor" para heredar el color del texto, y conviértelo a un componente React.'
+      }
+    ]
+  },
+  'macos': {
+    title: 'macOS Native (Apple HIG)',
+    description: 'Componentes, controles y patrones nativos de macOS según las Apple Human Interface Guidelines. Si vas a pedir una app de escritorio a la IA, usa estos nombres exactos: cada control nativo tiene una clase AppKit detrás.',
+    terms: [
+      {
+        term: 'Menu Bar',
+        definition: 'La barra de menús del sistema en la parte superior de la pantalla (File, Edit, View, Window, Help), disponible en todo momento aunque cambies de app.',
+        badPrompt: 'Pon los menús de Mac arriba en la app.',
+        proPrompt: 'Usa la Menu Bar nativa del sistema (no una barra propia de la app) para comandos estándar como File/Edit/View, y reserva el toolbar para acciones contextuales.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Menu Bar Extra (Status Item)',
+        definition: 'Iconos y controles que viven en el lado derecho de la Menu Bar del sistema (junto al reloj), como Wi-Fi, batería o los utilitarios de apps (NSStatusItem).',
+        badPrompt: 'Pon un iconito arriba a la derecha en la barra de menús.',
+        proPrompt: 'Implementa un Menu Bar Extra (NSStatusItem) con un icono template, un menú desplegable y actualización del estado mediante observer.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Context Menu',
+        definition: 'Un menú que aparece al hacer clic con el botón derecho (o Ctrl+clic) sobre un elemento y muestra acciones contextuales específicas de ese objeto.',
+        badPrompt: 'Pon las opciones al hacer clic derecho.',
+        proPrompt: 'Añade un Context Menu con las acciones relevantes al objeto seleccionado (Copiar, Renombrar, Eliminar), sin duplicar las que ya están en el menú de acciones.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Sidebar (Source List)',
+        definition: 'En macOS, el panel lateral que agrupa la navegación por secciones jerárquicas y desplegables (Source List), como en Finder o Mail, con items que pueden expandirse.',
+        badPrompt: 'Haz la barra lateral de la app como la del Finder.',
+        proPrompt: 'Construye una Sidebar estilo Source List con secciones plegables, iconos y badge de recuento por item, en un panel de ancho fijo con divider.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Column View (Browser)',
+        definition: 'El modo de navegación del Finder donde cada nivel de la jerarquía se muestra en una columna a la derecha de la anterior (NSBrowser).',
+        badPrompt: 'Haz el navegador de archivos con columnas.',
+        proPrompt: 'Implementa una Column View (NSBrowser) donde seleccionar un item de una columna abra la siguiente, ideal para jerarquías con muchos niveles.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Outline View',
+        definition: 'Una lista jerárquica expandible con items que contienen sub-items, mostrada con filas indentadas y disclosure triangles (NSOutlineView).',
+        badPrompt: 'Haz una lista de carpetas con flechitas para desplegar.',
+        proPrompt: 'Usa un Outline View (NSOutlineView) para la estructura jerárquica de datos, con filas indentadas y disclosure triangles para expandir/colapsar.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Disclosure Triangle',
+        definition: 'El pequeño triángulo que apunta a la derecha cuando está cerrado y hacia abajo cuando está abierto, usado para expandir y colapsar secciones o jerarquías.',
+        badPrompt: 'Pon una flechita para desplegar los subapartados.',
+        proPrompt: 'Añade un Disclosure Triangle a cada fila con hijos, animando la rotación del icono (90°) y mostrando u ocultando el contenido con transición suave.',
+        group: 'Menús y Navegación'
+      },
+      {
+        term: 'Mac Window',
+        definition: 'El contenedor principal de una app en macOS, que incluye la title bar con los traffic lights, el toolbar y el área de contenido (content view).',
+        badPrompt: 'Haz la ventana de la app con su barrita de arriba.',
+        proPrompt: 'Diseña la Mac Window con title bar nativa (traffic lights), toolbar opcional y un content view que respete los insets del sistema.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Traffic Lights',
+        definition: 'Los tres botones de color de la esquina superior izquierda de cada ventana macOS: rojo (cerrar), amarillo (minimizar) y verde (maximizar/fullscreen).',
+        badPrompt: 'Pon los tres botoncitos de colores de Mac en la ventana.',
+        proPrompt: 'Respeta los Traffic Lights nativos: no los reemplaces en la web; en apps nativas mantenlos en su posición estándar con los atajos Cmd+W/Cmd+M/Cmd+F.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Toolbar (Unified Title Bar)',
+        definition: 'La barra integrada bajo la title bar de una ventana macOS que agrupa acciones principales, ajustes de vista y controles; en diseño unificado se fusiona con el título.',
+        badPrompt: 'Pon una barra de acciones debajo del título de la ventana.',
+        proPrompt: 'Configura el toolbar en modo unified (titlebarAppearsTransparent) con NSToolbar, incluyendo items principales y un overflow para los secundarios.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Visual Effect Material (Vibrancy)',
+        definition: 'Los materiales translúcidos y difuminados de macOS (NSVisualEffectView) que aplican un desenfoque adaptativo al contenido subyacente, como en sidebar y panels.',
+        badPrompt: 'Haz que el panel tenga el fondo borroso de Mac.',
+        proPrompt: 'Aplica un Visual Effect Material (NSVisualEffectView) de tipo sidebar para el panel lateral, con el contenido adaptándose automáticamente a light/dark mode.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Inspector',
+        definition: 'Un panel lateral (normalmente a la derecha) que muestra propiedades y controles para el elemento seleccionado, como en Xcode o Numbers.',
+        badPrompt: 'Pon un panel a la derecha con las propiedades.',
+        proPrompt: 'Implementa un Inspector con pestañas contextuales según la selección, agrupado por secciones (Estilo, Disposición, Datos) con disclosure headers.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Panel (Floating Window)',
+        definition: 'Una ventana flotante auxiliar (NSPanel) que complementa a la ventana principal, como la paleta de colores, y puede estar siempre por delante de ella.',
+        badPrompt: 'Haz una ventanita flotante para las herramientas.',
+        proPrompt: 'Crea un Panel flotante (NSPanel) con estilo utility que se mantenga sobre la ventana principal y desaparezca al hacer clic fuera cuando sea no modal.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Sheet',
+        definition: 'En macOS, una ventana secundaria que se desliza desde la parte superior de la ventana padre y bloquea la interacción con ella hasta que se cierra (modal atado a la ventana).',
+        badPrompt: 'Pon una ventanita que salga de arriba de la ventana.',
+        proPrompt: 'Usa un Sheet para acciones modales ligadas a la ventana (guardar cambios), presentándolo con el estilo nativo y el botón de cierre correcto.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Save Panel',
+        definition: 'El diálogo del sistema para guardar un archivo, que permite elegir ubicación, nombre y formato, pudiendo expandirse a un selector de archivos completo.',
+        badPrompt: 'Haz el cuadro de guardar archivo con carpeta y nombre.',
+        proPrompt: 'Utiliza el Save Panel nativo (NSSavePanel) con una extensión de archivo por defecto, permitiendo la vista expandida del selector de archivos.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Scroll View',
+        definition: 'El contenedor que permite desplazar contenido que supera el área visible (NSScrollView), con barras de scroll, zoom y control del comportamiento de scroll.',
+        badPrompt: 'Que el contenido largo se pueda hacer scroll.',
+        proPrompt: 'Envuelve el contenido en un Scroll View (NSScrollView) con overlay scroll bars y soporte para el scroll elástico (rubber-banding) nativo.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Split View',
+        definition: 'El layout que divide el contenido en dos o más paneles (NSSplitView) con divisores arrastrables para ajustar el tamaño de cada uno.',
+        badPrompt: 'Divide la ventana en dos partes que se puedan arrastrar.',
+        proPrompt: 'Implementa un Split View (NSSplitView) con sidebar izquierdo y contenido principal, permitiendo ajustar el ancho con el divisor y colapsar el sidebar.',
+        group: 'Ventanas y Sistema'
+      },
+      {
+        term: 'Search Field',
+        definition: 'El campo de búsqueda nativo de macOS (NSSearchField) con icono de lupa, recents y un botón de limpiar; de estilo redondeado con borde.',
+        badPrompt: 'Pon un campo de búsqueda redondeado.',
+        proPrompt: 'Usa un Search Field nativo (NSSearchField) con placeholder, botón de limpiar visible al escribir y lista de búsquedas recientes.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Token Field',
+        definition: 'Un campo de texto que convierte las entradas confirmadas en "tokens" (chips editables con borde), usado para destinatarios de correo, etiquetas o tags (NSTokenField).',
+        badPrompt: 'Un campo donde se pongan etiquetas que se convierten en pastillas.',
+        proPrompt: 'Implementa un Token Field (NSTokenField) para añadir destinatarios, donde cada dirección validada se convierta en un token editable que pueda separarse de nuevo.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Combo Button',
+        definition: 'Un control que combina un menú desplegable con una acción principal: el cuerpo ejecuta la última acción y la flecha abre el menú con todas las opciones (NSComboButton).',
+        badPrompt: 'Pon un botón con flechita para elegir opción.',
+        proPrompt: 'Crea un Combo Button donde el clic en el cuerpo ejecute la acción por defecto y la flecha despliegue todas las variantes disponibles.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Pop-Up Button vs. Pull-Down Button vs. Combo Box',
+        definition: 'Pop-Up: muestra la opción seleccionada de un conjunto fijo y cambia al elegir. Pull-Down: ejecuta acciones o navega, manteniendo su título. Combo Box: combina un pop-up con un campo editable.',
+        badPrompt: 'Pon un menú desplegable para elegir el idioma.',
+        proPrompt: 'Usa un Pop-Up Button para seleccionar una opción persistente (idioma), un Pull-Down para acciones (Exportar >) y un Combo Box cuando la opción deba ser editable.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Segmented Control',
+        definition: 'Un control de segmentos conectados donde solo uno está activo a la vez, para alternar entre vistas, formatos o valores cercanos (NSSegmentedControl).',
+        badPrompt: 'Pon botoncitos unidos para cambiar de vista.',
+        proPrompt: 'Usa un Segmented Control (NSSegmentedControl) con los iconos o texto de cada vista y estado seleccionado con alto contraste.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Slider',
+        definition: 'Un control de arrastre para seleccionar un valor dentro de un rango continuo, con un thumb (tirador) y opcionalmente marcas de escala (NSSlider).',
+        badPrompt: 'Pon una barrita que se arrastre para el volumen.',
+        proPrompt: 'Implementa un Slider (NSSlider) con mínimo/máximo claros, thumb accesible por teclado (flechas) y etiqueta con el valor actual.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Stepper',
+        definition: 'Un control de dos botones (flecha arriba/abajo o +/−) que incrementa o decrementa un valor numérico de a pasos (NSStepper).',
+        badPrompt: 'Pon las flechitas para cambiar el número.',
+        proPrompt: 'Empareja un Stepper (NSStepper) con un campo numérico sincronizado, definiendo min/max e incremento y deshabilitando los límites.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Color Well',
+        definition: 'Un control que muestra el color actual y abre el selector de color del sistema al hacer clic para cambiarlo (NSColorWell).',
+        badPrompt: 'Pon un cuadradito de color para cambiarlo.',
+        proPrompt: 'Usa un Color Well (NSColorWell) para editar colores de marca, abriendo el color panel nativo y actualizando el token de color en tiempo real.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Level Indicator',
+        definition: 'Un indicador de nivel que muestra un valor dentro de un rango con relleno continuo o discreto (como el de batería o señal), útil para valores de lectura no editables.',
+        badPrompt: 'Pon una barrita de nivel como la de la batería.',
+        proPrompt: 'Usa un Level Indicator (NSLevelIndicator) de tipo capacity para mostrar la cantidad consumida, con color crítico cuando el valor supere el umbral.',
+        group: 'Inputs y Controles'
+      },
+      {
+        term: 'Alert',
+        definition: 'El diálogo de alerta nativo de macOS (NSAlert) que presenta información o pide una decisión con botones (ej. "Guardar", "Cancelar"), modal respecto a la ventana o la app.',
+        badPrompt: 'Pon el aviso de Mac para confirmar el borrado.',
+        proPrompt: 'Usa un Alert nativo (NSAlert) para confirmaciones destructivas, con el botón destructivo a la izquierda y el botón por defecto resaltado.',
+        group: 'Feedback y Estado'
+      },
+      {
+        term: 'Dock Badge',
+        definition: 'La insignia roja con número que se muestra sobre el icono de la app en el Dock para notificar la cantidad de avisos pendientes.',
+        badPrompt: 'Pon un número rojo en el icono del Dock.',
+        proPrompt: 'Actualiza el Dock Badge dinámicamente según los items no leídos y elimínalo (nil) cuando no haya pendientes.',
+        group: 'Feedback y Estado'
+      },
+      {
+        term: 'Focus Ring',
+        definition: 'El anillo azul de foco de macOS que rodea al elemento controlado por teclado, cuyo color varía según el accent color del sistema.',
+        badPrompt: 'Marca el campo con un borde azul cuando esté activo.',
+        proPrompt: 'Deja que el Focus Ring nativo gestione el foco por teclado (full keyboard access) y no lo ocultes con estilos personalizados.',
+        group: 'Feedback y Estado'
+      },
+      {
+        term: 'Helvetica',
+        definition: 'La tipografía histórica de Apple, utilizada en macOS durante años. Actualmente el sistema usa SF Pro como fuente del sistema, más legible y variable.',
+        badPrompt: 'Usa la fuente Helvetica de siempre.',
+        proPrompt: 'No fuerces Helvetica: usa la fuente del sistema (SF Pro en macOS, system-ui en web) para aprovechar los estilos variables y la legibilidad nativa.',
+        group: 'Tipografía'
+      },
+      {
+        term: 'NSBrowser (Column View)',
+        definition: 'La clase AppKit que implementa la vista de columnas del Finder para navegar jerarquías de muchos niveles mostrando una columna por nivel.',
+        badPrompt: 'Usa la clase de navegador de columnas de AppKit.',
+        proPrompt: 'Configura NSBrowser para la navegación por columnas con delegados que sirvan el número de columnas y el contenido de cada una según la selección.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSOutlineView',
+        definition: 'La clase AppKit que renderiza listas jerárquicas expandibles con filas, disclosure triangles e indentación.',
+        badPrompt: 'Usa la clase de lista con subitems de AppKit.',
+        proPrompt: 'Implementa NSOutlineView con un data source jerárquico, expandiendo por defecto el primer nivel y con drag & drop para reordenar filas.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSStatusItem',
+        definition: 'La clase que añade iconos y menús a la barra de menús del sistema (Menu Bar Extra), visible aunque la app esté oculta.',
+        badPrompt: 'Usa la clase para el icono de la barra de menús.',
+        proPrompt: 'Crea un NSStatusItem con un icono template (SF Symbol), un menú con acciones y un tooltip descriptivo del estado de la app.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSDockTile Badge',
+        definition: 'La clase que controla la insignia (número) que se muestra sobre el icono de la app en el Dock.',
+        badPrompt: 'Usa la clase para el número del Dock.',
+        proPrompt: 'Actualiza NSDockTile badgeLabel con el contador de notificaciones y vacíalo ("") cuando la app esté activa.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSPanel',
+        definition: 'La subclase de NSWindow para ventanas auxiliares flotantes (paletas, inspectores) que pueden mantenerse sobre la ventana principal.',
+        badPrompt: 'Usa la clase de panel flotante de AppKit.',
+        proPrompt: 'Crea un NSPanel con nivel flotante (floating panel), estilo utility y cierre automático al hacer clic fuera si es no modal.',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSPopover',
+        definition: 'La clase AppKit que presenta contenido contextual en una burbuja anclada a un elemento, ideal para acciones rápidas sin cambiar de ventana.',
+        badPrompt: 'Usa la clase de popover de AppKit.',
+        proPrompt: 'Presenta un NSPopover anclado al botón, con contentViewController y comportamiento transient (se cierra al hacer clic fuera).',
+        group: 'Componentes AppKit (clases NS)'
+      },
+      {
+        term: 'NSVisualEffectView',
+        definition: 'La clase que aplica los materiales translúcidos (vibrancy) de macOS sobre el contenido subyacente.',
+        badPrompt: 'Usa la clase del fondo borroso de AppKit.',
+        proPrompt: 'Aplica NSVisualEffectView con blendingMode "withinWindow" y material según el estado de la ventana (active/inactive) para el sidebar o el toolbar.',
+        group: 'Componentes AppKit (clases NS)'
       }
     ]
   }

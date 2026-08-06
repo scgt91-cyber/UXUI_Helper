@@ -12,7 +12,8 @@ const categoryColors: Record<string, string> = {
   'ai-assisted': 'text-v-yellow border-v-yellow',
   'frontend': 'text-v-green border-v-green',
   'integration': 'text-v-red border-v-red',
-  'ui-components': 'text-v-ink border-v-ink'
+  'ui-components': 'text-v-ink border-v-ink',
+  'macos': 'text-v-blue border-v-blue'
 };
 
 export function DictionaryPage({ categoryId }: DictionaryPageProps) {
