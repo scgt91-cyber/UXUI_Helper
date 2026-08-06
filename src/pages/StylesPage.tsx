@@ -6,8 +6,6 @@ interface DesignStyle {
   group: string;
   tipo: string;
   idea: string;
-  reconocer: string[];
-  ejemplo: string;
   visual: React.ReactNode;
 }
 
@@ -17,13 +15,7 @@ const styles: DesignStyle[] = [
     name: 'Skeuomorphism',
     group: 'Superficies y Materiales',
     tipo: 'Estilo visual · Historicismo digital',
-    idea: 'Imitar el aspecto de objetos físicos reales: texturas, sombras y materiales que ya conocemos del mundo analógico.',
-    reconocer: [
-      'Texturas de piel, papel, madera o metal',
-      'Botones con relieve, brillo y profundidad',
-      'Sombras duras que simulan luz real',
-    ],
-    ejemplo: 'iOS 1–6 (Calendario con tapas y anillas), iCal, GarageBand, la libreta de Contactos.',
+    idea: 'Tomar prestado el aspecto de las cosas tangibles —papel, cuero, madera— y llevarlo a la pantalla para que la interfaz se entienda por pura intuición física.',
     visual: (
       <div className="w-full max-w-md">
         <div className="rounded-lg border border-amber-800/50 bg-gradient-to-br from-amber-100 via-amber-300 to-amber-600 p-5 shadow-[0_6px_16px_rgba(0,0,0,0.3),inset_0_2px_6px_rgba(0,0,0,0.25)]">
@@ -43,13 +35,7 @@ const styles: DesignStyle[] = [
     name: 'Neumorphism',
     group: 'Superficies y Materiales',
     tipo: 'Técnica · Estilo visual',
-    idea: 'Mismo color de fondo y elemento; dos sombras (clara y oscura) en esquinas opuestas para simular relieve suave, casi "extruido" del fondo.',
-    reconocer: [
-      'Fondo y elementos del mismo color',
-      'Dos sombras: una clara, una oscura',
-      'Sin bordes visibles, formas muy redondeadas',
-    ],
-    ejemplo: 'Paneles de control, relojes y widgets de Dribbble (2020).',
+    idea: 'La pieza y su fondo comparten el mismo tono, y un par de sombras contrapuestas —una luminosa y otra oscura— moldean el elemento para que parezca sobresalir o hundirse del lienzo.',
     visual: (
       <div className="flex w-full max-w-md items-center justify-center gap-6 rounded-2xl bg-[#e0e5ec] p-8">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#e0e5ec] text-2xl shadow-[9px_9px_18px_#b8bdc7,-9px_-9px_18px_#ffffff]">
@@ -65,13 +51,7 @@ const styles: DesignStyle[] = [
     name: 'Claymorphism',
     group: 'Superficies y Materiales',
     tipo: 'Estilo visual',
-    idea: 'Objetos de "arcilla": formas 3D suaves, colores pastel y luz frontal que deja un brillo redondeado en la parte superior.',
-    reconocer: [
-      'Esquinas muy redondeadas',
-      'Colores pastel o vivos con brillo superior',
-      'Sombra difusa bajo la pieza',
-    ],
-    ejemplo: 'Stacks social, ilustraciones y banners de apps.',
+    idea: 'Piezas que parecen modeladas a mano: siluetas blandas, tonos dulces y un resplandor cenital que acaricia el borde superior de cada figura.',
     visual: (
       <div className="flex w-full max-w-md items-center justify-center bg-gradient-to-br from-v-blue/20 to-v-green/20 p-8">
         <div className="relative h-36 w-36 rounded-[2rem] bg-gradient-to-b from-v-blue to-[#0077c0] shadow-[0_18px_30px_-8px_rgba(0,100,180,0.6)]">
@@ -86,13 +66,7 @@ const styles: DesignStyle[] = [
     name: 'Glassmorphism',
     group: 'Superficies y Materiales',
     tipo: 'Estilo visual · Técnica de material',
-    idea: 'Efecto "cristal esmerilado": paneles translúcidos con desenfoque del fondo y un borde fino y claro.',
-    reconocer: [
-      'Paneles semi-transparentes con backdrop-blur',
-      'Bordes blancos finos (border-white/30–60)',
-      'El contenido detrás se difumina',
-    ],
-    ejemplo: 'macOS Big Sur (2020), Windows 11, iOS 15+.',
+    idea: 'Vidrio empañado aplicado a la interfaz: capas semiopacas que dejan entrever lo que tienen detrás, todo difuminado y rematado con un contorno casi blanco.',
     visual: (
       <div className="relative h-40 w-full max-w-md overflow-hidden rounded-lg">
         <div className="absolute inset-0 bg-[conic-gradient(at_40%_30%,#f7a11a,#009fe3,#8db600,#e6261f,#f7a11a)]"></div>
@@ -107,13 +81,7 @@ const styles: DesignStyle[] = [
     name: 'Liquid Glass',
     group: 'Superficies y Materiales',
     tipo: 'Estilo visual',
-    idea: 'Evolución del vidrio: formas fluidas y orgánicas, reflejos especulares brillantes y profundidad suave — como gotas de agua o vidrio derretido.',
-    reconocer: [
-      'Curvas orgánicas y "abultadas"',
-      'Brillos especulares marcados',
-      'Sombras suaves y difusas sobre fondos oscuros',
-    ],
-    ejemplo: 'iOS 26 (2025) y el nuevo menú de Control.',
+    idea: 'El cristal llevado a su versión más fluida: contornos que se derraman, destellos que resbalan por la superficie y una sensación de profundidad apacible.',
     visual: (
       <div className="relative h-44 w-full max-w-md overflow-hidden rounded-xl bg-gradient-to-br from-v-blue via-v-ink to-v-red">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#ffffff,transparent_40%)] opacity-50"></div>
@@ -130,13 +98,7 @@ const styles: DesignStyle[] = [
     name: 'Windows Aero',
     group: 'Retro y Colorido',
     tipo: 'Estilo visual',
-    idea: 'Transparencia esmerilada en las ventanas, reflejos y animaciones suaves. El "cristal" de Windows Vista y 7.',
-    reconocer: [
-      'Bordes de ventana translúcidos',
-      'Barra de título con degradado azul',
-      'Botón Inicio con esfera luminosa',
-    ],
-    ejemplo: 'Windows Vista y Windows 7 (2007–2009).',
+    idea: 'Las ventanas de Windows se vuelven cristalinas: paneles que translucen el escritorio, reflejos que se deslizan y transiciones que se sienten líquidas.',
     visual: (
       <div className="w-full max-w-md overflow-hidden rounded-md border border-white/60 bg-white/40 shadow-2xl">
         <div className="flex items-center justify-between bg-gradient-to-r from-[#2b5797] via-[#4a8fe0] to-[#2b5797] px-3 py-1.5">
@@ -155,13 +117,7 @@ const styles: DesignStyle[] = [
     name: 'Aqua',
     group: 'Retro y Colorido',
     tipo: 'Estilo visual',
-    idea: 'La estética "subacuática" de Apple: gotas de agua, botones gelatina y brillos especulares de caramelo.',
-    reconocer: [
-      'Colores candy y saturación alta',
-      'Brillo superior en forma de media luna',
-      'Sombras suaves y reflejos de agua',
-    ],
-    ejemplo: 'macOS 10.0–10.6 (2000–2009), los famosos botones de gel.',
+    idea: 'El mundo submarino de Apple en los 2000: superficies de gelatina, destellos cóncavos y una paleta de dulces tan brillante que parece húmeda.',
     visual: (
       <div className="flex w-full max-w-md items-center justify-center bg-gradient-to-b from-[#1e5cb8] to-[#a7c9ee] p-8">
         <div className="h-24 w-24 rounded-full bg-[radial-gradient(circle_at_30%_25%,#ffffff,#7fc0ff_45%,#1c5cb8_90%)] shadow-[0_10px_25px_rgba(0,0,0,0.4)]"></div>
@@ -173,13 +129,7 @@ const styles: DesignStyle[] = [
     name: 'Y2K',
     group: 'Retro y Colorido',
     tipo: 'Movimiento estético · Cultura visual',
-    idea: 'El optimismo digital del cambio de milenio: cromo, metales pulidos, gradientes de neón y futurismo glossy.',
-    reconocer: [
-      'Texturas metálicas o cromadas',
-      'Neones (rosa, cian, púrpura) sobre fondos claros',
-      'Formas asimétricas y estrellas',
-    ],
-    ejemplo: 'Primer Web 2.0, juguetes digitales y el "efecto cromo" de los 2000.',
+    idea: 'La estética de un futuro imaginado en el 2000: superficies cromadas, reflejos metálicos y neones suaves que gritan "bienvenido al nuevo milenio".',
     visual: (
       <div className="w-full max-w-md bg-[radial-gradient(circle_at_50%_0%,#ffd1e8,#ff6ec7_50%,#6a0dad_110%)] p-8 text-center">
         <div className="inline-block bg-gradient-to-r from-[#b9f2ff] via-[#ffffff] to-[#ff9be0] bg-clip-text text-5xl font-black uppercase tracking-tighter text-transparent drop-shadow-[0_2px_0_rgba(0,0,0,0.2)]">
@@ -193,13 +143,7 @@ const styles: DesignStyle[] = [
     name: 'Frutiger Aero',
     group: 'Retro y Colorido',
     tipo: 'Estilo visual',
-    idea: '"Frescura y limpieza tecnológica": naturaleza + cristal. Agua, burbujas, hojas y reflejos luminosos.',
-    reconocer: [
-      'Azules y verdes de agua',
-      'Burbujas y brillos circulares',
-      'Transparencias y superficies pulidas',
-    ],
-    ejemplo: 'Windows 7, macOS 10.7+, Nintendo Wii, PS3 XMB.',
+    idea: 'Un remanso de calma tecnológica: aguas transparentes, burbujas flotando y vegetación que asoma tras superficies de cristal pulido.',
     visual: (
       <div className="relative h-40 w-full max-w-md overflow-hidden rounded-lg bg-gradient-to-b from-[#7fd8ff] to-[#1e90a0]">
         <div className="absolute inset-0 flex items-center justify-center gap-3">
@@ -218,13 +162,7 @@ const styles: DesignStyle[] = [
     name: 'Flat Design',
     group: 'Plano y Sobrio',
     tipo: 'Estilo visual',
-    idea: 'Sin profundidad: colores planos, formas simples y tipografía limpia. Nada de gradientes ni sombras.',
-    reconocer: [
-      'Sin sombras ni degradados',
-      'Colores sólidos y vibrantes',
-      'Iconos y formas geométricas simples',
-    ],
-    ejemplo: 'Windows 8 (Metro), iOS 7+, Material Design v1.',
+    idea: 'Cero fingimiento de volumen: superficies sólidas, siluetas sencillas y texto despejado, sin gradientes ni sombras que estorben.',
     visual: (
       <div className="w-full max-w-md border border-gray-200 bg-white p-8">
         <div className="grid grid-cols-3 gap-3">
@@ -241,13 +179,7 @@ const styles: DesignStyle[] = [
     name: 'Minimalism',
     group: 'Plano y Sobrio',
     tipo: 'Filosofía de diseño',
-    idea: 'Reducir a lo esencial: espacio en blanco, pocos elementos y una jerarquía visual clara.',
-    reconocer: [
-      'Mucho espacio en blanco',
-      'Paleta monocroma o casi nula',
-      'Ausencia total de decoración',
-    ],
-    ejemplo: 'Google, Apple.com, Dropbox (inicios).',
+    idea: 'Lo imprescindible y nada más: el vacío se vuelve protagonista, los tonos se apagan y cada elemento debe ganarse su sitio.',
     visual: (
       <div className="flex h-44 w-full max-w-md flex-col items-center justify-center bg-white p-10 text-center">
         <div className="h-px w-10 bg-gray-900"></div>
@@ -262,13 +194,7 @@ const styles: DesignStyle[] = [
     name: 'Web Brutalism',
     group: 'Brutalismo',
     tipo: 'Estilo web · Reacción',
-    idea: 'HTML sin maquillaje: fealdad deliberada, funcionalidad cruda y cero pulido estético.',
-    reconocer: [
-      'Tipografías por defecto del sistema',
-      'Colores muy contrastados y bordes duros',
-      'Contadores de visitas, sin "diseño"',
-    ],
-    ejemplo: 'Bloomberg, Drudge Report, craigslist.',
+    idea: 'La página tal como nació, sin pulido ni concesiones: contenido directo, tipografía por defecto y una crudeza que no pide disculpas.',
     visual: (
       <div className="w-full max-w-md bg-white p-5 font-mono text-xs">
         <p className="text-[#0000cc] underline">Welcome to my site!!</p>
@@ -282,13 +208,7 @@ const styles: DesignStyle[] = [
     name: 'Neobrutalism',
     group: 'Brutalismo',
     tipo: 'Estilo visual',
-    idea: 'Brutalismo con reglas propias: bordes gruesos, sombras duras desplazadas y colores vivos sin miedo.',
-    reconocer: [
-      'Bordes negros de 2–4px (border-v-ink)',
-      'Sombras offset sin desenfoque (8px 8px 0)',
-      'Esquinas redondeadas y colores saturados',
-    ],
-    ejemplo: 'Goblin.tools, la escena indie 2022+, este mismo sitio.',
+    idea: 'Un brutalismo más civilizado pero igual de contundente: trazos negros rotundos, sombras que no se difuminan y color a raudales.',
     visual: (
       <div className="flex w-full max-w-md flex-wrap items-center gap-4 bg-[#fdf6e3] p-8">
         <div className="rounded-xl border-4 border-v-ink bg-v-yellow px-6 py-4 text-2xl font-black uppercase tracking-tight shadow-[6px_6px_0_#111111]">
@@ -310,13 +230,7 @@ const styles: DesignStyle[] = [
     name: 'Vernacular Web',
     group: 'Web Clásica',
     tipo: 'Estilo web · Cultura',
-    idea: 'La web de los 90 hecha por aficionados: tablas, marquees, enlaces azules y guestbooks.',
-    reconocer: [
-      'Marquees y GIFs animados',
-      'Fondos con patrones y "Under Construction"',
-      'Enlaces azules subrayados por defecto',
-    ],
-    ejemplo: 'GeoCities, Angelfire y las páginas personales de 1996.',
+    idea: 'La internet casera de los 90, construida por gente que aprendía sobre la marcha: tablas, textos en movimiento y enlaces que eran promesas.',
     visual: (
       <div className="w-full max-w-md border border-[#808080] bg-[#c0c0c0] p-4 font-mono text-xs">
         <p className="border border-[#808080] bg-[#ffffcc] px-2 py-1">Welcome to my homepage!</p>
@@ -358,7 +272,7 @@ export function StylesPage() {
           Estilos de Diseño
         </h1>
         <p className="text-lg md:text-xl font-medium max-w-3xl">
-          Movimientos, técnicas y tendencias visuales. Cómo se ven, cómo reconocerlos y dónde vivieron — para que dejes de decir "hazlo bonito" y hables con propiedad.
+          Movimientos, técnicas y tendencias visuales explicados en pocas líneas y mostrados con un ejemplo visual. Conócelos de un vistazo para no volver a decir "hazlo bonito" sin propiedad.
         </p>
       </div>
 
@@ -404,27 +318,6 @@ export function StylesPage() {
                       <p className="text-lg font-medium leading-relaxed">
                         {style.idea}
                       </p>
-
-                      <div className="mt-4">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                          Cómo reconocerlo
-                        </h3>
-                        <ul className="flex flex-col gap-1.5">
-                          {style.reconocer.map((r) => (
-                            <li key={r} className="flex items-start gap-2.5 text-base text-v-ink/80">
-                              <span className="mt-2 w-2 h-2 border border-v-ink bg-v-yellow shrink-0"></span>
-                              {r}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-4 border-l-4 border-v-ink pl-4">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                          Ejemplo
-                        </h3>
-                        <p className="font-medium text-v-ink">{style.ejemplo}</p>
-                      </div>
 
                       <div className="mt-6">{style.visual}</div>
                     </div>
